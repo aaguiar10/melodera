@@ -188,7 +188,11 @@ body {
   padding-right: 0;
 }
 
-
+#saveSongToast,
+#plistAddSongToast {
+  width: fit-content;
+  z-index: 5;
+}
 
 #branding {
   width: fit-content;

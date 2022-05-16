@@ -281,6 +281,36 @@
             >
               <p id="albumart"></p>
             </div>
+            <div aria-live="polite" aria-atomic="true" class="position-relative">
+              <!-- - `.toast-container` for spacing between toasts -->
+              <!-- - `.position-absolute`, `bottom-0` & `end-0` to position the toasts in the bottom right corner -->
+              <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
+              <div class="toast-container position-absolute bottom-0 end-0 p-3" id="toastContain">
+
+                <div class="toast align-items-center" id="saveSongToast" role="alert" 
+                     aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                  <div class="d-flex">
+                    <div class="toast-body">
+                    Song saved
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" 
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+                  </div>
+                </div>
+
+                <div class="toast align-items-center" id="plistAddSongToast" role="alert" 
+                     aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                  <div class="d-flex">
+                    <div class="toast-body">
+                    Song added to playlist
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" 
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
         </div>
         <canvas id="features-chart"></canvas>

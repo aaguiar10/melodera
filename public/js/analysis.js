@@ -2373,6 +2373,8 @@ function addTrack2Plist(track, playlist) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  }).then(() => {
+    $('#plistAddSongToast').toast('show')
   }).catch((e) => console.error(e));
 }
 
@@ -2382,6 +2384,8 @@ function saveCurrTrack() {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  }).then(() => {
+    $('#saveSongToast').toast('show')
   }).catch((e) => console.error(e));
 } // save track functionality
 
