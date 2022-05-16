@@ -1,6 +1,3 @@
-// server.js
-// where your node app starts
-
 // init project
 var qs = require("querystring");
 var express = require("express");
