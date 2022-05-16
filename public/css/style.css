@@ -188,6 +188,10 @@ body {
   padding-right: 0;
 }
 
+#toastDiv {
+  display: none;
+}
+
 #saveSongToast,
 #plistAddSongToast {
   width: fit-content;

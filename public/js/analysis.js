@@ -2389,6 +2389,49 @@ function saveCurrTrack() {
   }).catch((e) => console.error(e));
 } // save track functionality
 
+var saveSongNotif = document.getElementById('saveSongToast');
+var song2PlistNotif = document.getElementById('plistAddSongToast');
+var prevClassState1 = saveSongNotif.classList.contains('show');
+var prevClassState2 = song2PlistNotif.classList.contains('show');
+var observer1 = new MutationObserver(function(mutations) { // observe state of saveSongNotif
+                    mutations.forEach(function(mutation) {
+                        if(mutation.attributeName == "class"){
+                            var currentClassState1 = mutation.target.classList.contains('show');
+                            if(prevClassState1 !== currentClassState1)    {
+                                prevClassState1 = currentClassState1;
+                                if(currentClassState1) {
+                                    //console.log("saveSongNotif toast is showing");
+                                    document.getElementById('toastDiv').style.display = "block";
+                                }
+                                else {
+                                    //console.log("saveSongNotif toast not showing");
+                                    document.getElementById('toastDiv').style.display = "none";
+                                }
+                            }
+                        }
+                    });
+                });
+var observer2 = new MutationObserver(function(mutations) { // observe state of song2PlistNotif
+                    mutations.forEach(function(mutation) {
+                        if(mutation.attributeName == "class"){
+                            var currentClassState2 = mutation.target.classList.contains('show');
+                            if(prevClassState2 !== currentClassState2)    {
+                                prevClassState2 = currentClassState2;
+                                if(currentClassState2) {
+                                    //console.log("song2PlistNotif toast is showing");
+                                    document.getElementById('toastDiv').style.display = "block";
+                                }
+                                else {
+                                    //console.log("song2PlistNotif toast not showing");
+                                    document.getElementById('toastDiv').style.display = "none";
+                                }
+                            }
+                        }
+                    });
+                });
+observer1.observe(saveSongNotif, {attributes: true});
+observer2.observe(song2PlistNotif, {attributes: true});
+
 // add functionality to use spacebar for play/pause
 window.onkeydown= function(event){
       if (document.activeElement !== document.getElementById("inputSrch") &&
