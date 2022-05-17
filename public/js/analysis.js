@@ -1377,6 +1377,7 @@ function checkId(id) {
         ` click music icon in bottom left of page to sync with Melodera.`)
          localStorage.setItem('alertedCheckId','yes');
         }
+        return '';
       });
   }
   else {
@@ -1412,15 +1413,8 @@ async function getAnalysis(id) {
     document.getElementById("moreBtnSimT").remove()
   }
   let query = "/analysis?id=";
-  try {
-    id = await checkId(id);
-    if (id === '') {
-      alert(`Unable to fetch currently playing song. Please try again`+
-      ` by choosing song through another device and clicking music note icon to sync.`)
-      return;
-    }
-  } catch (error) {
-    console.error(error);
+  id = await checkId(id);
+  if (id === '') {
     alert(`Unable to fetch currently playing song. Please try again`+
     ` by choosing song through another device and clicking music note icon to sync.`)
     return;
