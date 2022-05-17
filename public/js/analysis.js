@@ -1384,7 +1384,7 @@ function checkId(id) {
   }
 }
 
-function fetchQuery(query, id) {
+function fetchQuery(query) {
   return fetch(query)
     .then((e) => e.json())
     .then((data) => {
@@ -1413,9 +1413,13 @@ async function getAnalysis(id) {
   }
   let query = "/analysis?id=";
   id = await checkId(id);
-  query += (id !== '' ? id : alert(`Unable to fetch currently playing song. Please try again`+
-            ` by choosing song through another device and clicking music note icon to sync.`));
-  await fetchQuery(query, id);
+  if (id === '') {
+    alert(`Unable to fetch currently playing song. Please try again`+
+    ` by choosing song through another device and clicking music note icon to sync.`)
+    return;
+  }
+  query += id;
+  await fetchQuery(query);
 }
 
 function moreBtnResults(category, isLibrary) {
@@ -2076,6 +2080,9 @@ function getFeaturesData2(id) {
 
 async function getFeatures(id) {
   id = await checkId(id);
+  if (id === '') {
+    return;
+  }
   await getFeaturesData1(id);
   await getFeaturesData2(id);
 }
