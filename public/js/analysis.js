@@ -1363,6 +1363,9 @@ function checkId(id) {
     })
       .then((e) => e.json())
       .then((data) => {
+      if (data.item === null) {
+        return ''
+      }
       return data.item.id;
     })
       .catch((error) => {
@@ -1409,7 +1412,8 @@ async function getAnalysis(id) {
   }
   let query = "/analysis?id=";
   id = await checkId(id);
-  query += id;
+  query += (id !== '' ? id : alert(`Unable to fetch currently playing song. Please try again`+
+            ` by choosing song through another device and clicking music note icon to sync.`));
   await fetchQuery(query, id);
 }
 
