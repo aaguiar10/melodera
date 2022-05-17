@@ -225,21 +225,6 @@ app.get("/newReleases", function (request, response) {
     });
 });
 
-app.get("/getAvailDevices", function (request, response) {
-  spotifyApi.setAccessToken(request.headers['authorization'].split(' ')[1]);
-  reAuthenticateOnFailure((failure) => {
-    spotifyApi.getMyDevices()
-    .then(function(data) {
-      let availableDevices = data.body.devices;
-      availableDevices.map(function(device) {
-               if (device.is_active) {
-                  response.send(device)
-               }
-      })
-      }, failure);
-    });
-});
-
 // listen for requests
 var listener = app.listen(process.env.PORT, function () {
   console.log("Your app is listening on port " + listener.address().port);
