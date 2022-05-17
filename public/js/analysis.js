@@ -329,7 +329,7 @@ syncBtn.addEventListener("click", syncPlayer);
 // sync playback of alternative client with Melodera's visualizer
 function syncPlayer() {
   if (profileInfo['subLevel'] === "open") {
-    setTimeout(doneResizing, 1000);
+    setTimeout(doneResizing(true), 1000);
   }
 }
 
@@ -350,7 +350,8 @@ function checkNull() {
 }
 
 function doneResizing(specialCase = false) {
-if (document.getElementById("displaysong").contains(document.getElementById("trackStatus"))) {
+if (document.getElementById("displaysong").contains(document.getElementById("trackStatus")) ||
+    specialCase) {
   checkExpir();
   fetch("https://api.spotify.com/v1/me/player/currently-playing", {
     headers: {
