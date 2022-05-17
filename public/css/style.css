@@ -10,6 +10,7 @@ x/* styles */
 
 body {
   background-color: #f5efef;
+  padding: 5vh 5vw;
 }
 
 ::backdrop
@@ -190,12 +191,12 @@ body {
 
 #toastDiv {
   display: none;
+  z-index: 5;
 }
 
 #saveSongToast,
 #plistAddSongToast {
   width: fit-content;
-  z-index: 5;
 }
 
 #branding {
@@ -307,15 +308,13 @@ header {
   max-height: 45px;
 }
 
-body {
-  padding: 5vh 5vw;
-}
 #cover_and_play {
   display: flex;
   width: 100%;
   height: max-content;
   flex-flow: row;
 }
+
 #displaysong {
   display: flex;
   align-content: center;
