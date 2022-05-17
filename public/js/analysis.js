@@ -1412,8 +1412,15 @@ async function getAnalysis(id) {
     document.getElementById("moreBtnSimT").remove()
   }
   let query = "/analysis?id=";
-  id = await checkId(id);
-  if (id === '') {
+  try {
+    id = await checkId(id);
+    if (id === '') {
+      alert(`Unable to fetch currently playing song. Please try again`+
+      ` by choosing song through another device and clicking music note icon to sync.`)
+      return;
+    }
+  } catch (error) {
+    console.error(error);
     alert(`Unable to fetch currently playing song. Please try again`+
     ` by choosing song through another device and clicking music note icon to sync.`)
     return;
