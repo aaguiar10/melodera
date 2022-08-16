@@ -590,7 +590,7 @@ function getTopArtists (timeframe) {
                        }"
                        width="64" height="64">
                   <p class="resultText">
-                    ${index + 1}.  ${artist.name}target="_blank"
+                    ${index + 1}.  ${artist.name}
                   </p>
                   <span onclick="event.stopPropagation()">
                   <a class="btn btn-sm spotifyLink" href="${
