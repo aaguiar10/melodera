@@ -536,8 +536,11 @@ p {
 }
 
 .spotifyLink:hover {
-  border-left: 0.9px solid #434B4E;
-  border-right: 0.9px solid #434B4E;
+  border-left: 1px solid #434B4E;
+  border-right: 1px solid #434B4E;
+}
+.spotifyLink:focus {
+  outline-style: none;
 }
 
 .trackOptions {
