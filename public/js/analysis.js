@@ -230,11 +230,13 @@ function getFeaturedPlists () {
                   ${
                     playlist.description.trim() !== ''
                       ? `<p class="resultText fw-light fs-6">${playlist.description.trim()}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${
                             playlist.external_urls.spotify
                           }" target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                      <ol class="addResultText" id=${playlist.id}>
                     </ol>`
                       : `<ol class="addResultText" id=${playlist.id}></ol>`
@@ -296,10 +298,12 @@ function getNewReleases () {
                   ${
                     album.release_date.trim() !== ''
                       ? `<p class="resultText fw-light fs-6">${album.album_type}, ${album.release_date}</p>
+                        <span onclick="event.stopPropagation()">
                         <a class="btn btn-sm spotifyLink" href="${album.external_urls.spotify}" 
                             target="_blank">
                         <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                         </a>
+                        </span>
                      <ol class="addResultText" id=${album.id}>
                     </ol>`
                       : `<ol class="addResultText" id=${album.id}></ol>`
@@ -588,11 +592,13 @@ function getTopArtists (timeframe) {
                   <p class="resultText">
                     ${index + 1}.  ${artist.name}target="_blank"
                   </p>
+                  <span onclick="event.stopPropagation()">
                   <a class="btn btn-sm spotifyLink" href="${
                     artist.external_urls.spotify
                   }" target="_blank">
                   <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                   </a>
+                  </span>
                   <ol class="addResultText" id=${artist.id + '_' + timeframe}>
                   </ol>
                  </div>`
@@ -821,10 +827,12 @@ function getTopTracks (timeframe) {
                     ${
                       track.album.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">Released: ${track.album.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${track.album.external_urls.spotify}"
                              target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                       </div>`
                         : `</div>`
                     }
@@ -1914,18 +1922,22 @@ function showResults (data, isLibrary) {
                       isLibrary
                         ? result.track.album.release_date.trim() !== ''
                           ? `<p class="resultText fw-light fs-6">Released: ${result.track.album.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.track.album.external_urls.spotify}"
                              target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                       </div>`
                           : `</div>`
                         : result.album.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">Released: ${result.album.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.album.external_urls.spotify}"
                              target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                       </div>`
                         : `</div>`
                     }
@@ -1962,11 +1974,13 @@ function showResults (data, isLibrary) {
                     <p class="resultText">
                     ${result.name}
                     </p>
+                    <span onclick="event.stopPropagation()">
                     <a class="btn btn-sm spotifyLink" href="${
                       result.external_urls.spotify
                     }" target="_blank">
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
+                    </span>
                     <ol class="addResultText" id=${result.id}>   
                     </ol>
                   </div>
@@ -2022,17 +2036,21 @@ function showResults (data, isLibrary) {
                       isLibrary
                         ? result.album.release_date.trim() !== ''
                           ? `<p class="resultText fw-light fs-6">${result.album.album_type}, ${result.album.release_date}</p>
+                            <span onclick="event.stopPropagation()">
                             <a class="btn btn-sm spotifyLink" href="${result.album.external_urls.spotify}" target="_blank">
                             <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                             </a>
+                            </span>
                        <ol class="addResultText" id=${result.album.id}>
                       </ol>`
                           : `<ol class="addResultText" id=${result.album.id}></ol>`
                         : result.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">${result.album_type}, ${result.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.external_urls.spotify}" target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                        <ol class="addResultText" id=${result.id}>
                       </ol>`
                         : `<ol class="addResultText" id=${result.id}></ol>`
@@ -2072,11 +2090,13 @@ function showResults (data, isLibrary) {
                     <p class="resultText">
                     ${result.name} - By ${result.owner.display_name}
                     </p>
+                    <span onclick="event.stopPropagation()">
                     <a class="btn btn-sm spotifyLink" href="${
                       result.external_urls.spotify
                     }" target="_blank">
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
+                    </span>
                     <ol class="addResultText" id=${result.id}>
                     </ol>
                   </div>
@@ -2136,18 +2156,22 @@ function showAddResults (data, isLibrary, category) {
                       isLibrary
                         ? result.track.album.release_date.trim() !== ''
                           ? `<p class="resultText fw-light fs-6">Released: ${result.track.album.release_date}</p>
+                            <span onclick="event.stopPropagation()">
                             <a class="btn btn-sm spotifyLink" href="${result.track.album.external_urls.spotify}" 
                                target="_blank">
                             <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                             </a>
+                            </span>
                       </div>`
                           : `</div>`
                         : result.album.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">Released: ${result.album.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.album.external_urls.spotify}" 
                              target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                       </div>`
                         : `</div>`
                     }
@@ -2172,11 +2196,13 @@ function showAddResults (data, isLibrary, category) {
                     <p class="resultText">
                     ${result.name}
                     </p>
+                    <span onclick="event.stopPropagation()">
                     <a class="btn btn-sm spotifyLink" href="${
                       result.external_urls.spotify
                     }" target="_blank">
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
+                    </span>
                     <ol class="addResultText" id=${result.id}>   
                     </ol>
                   </div>
@@ -2222,17 +2248,21 @@ function showAddResults (data, isLibrary, category) {
                       isLibrary
                         ? result.album.release_date.trim() !== ''
                           ? `<p class="resultText fw-light fs-6">${result.album.album_type}, ${result.album.release_date}</p>
+                            <span onclick="event.stopPropagation()">
                             <a class="btn btn-sm spotifyLink" href="${result.album.external_urls.spotify}" target="_blank">
                             <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                             </a>
+                            </span>
                        <ol class="addResultText" id=${result.album.id}>
                       </ol>`
                           : `<ol class="addResultText" id=${result.album.id}></ol>`
                         : result.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">${result.album_type}, ${result.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.external_urls.spotify}" target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                        <ol class="addResultText" id=${result.id}>
                       </ol>`
                         : `<ol class="addResultText" id=${result.id}></ol>`
@@ -2260,11 +2290,13 @@ function showAddResults (data, isLibrary, category) {
                     <p class="resultText">
                     ${result.name} - By ${result.owner.display_name}
                     </p>
+                    <span onclick="event.stopPropagation()">
                     <a class="btn btn-sm spotifyLink" href="${
                       result.external_urls.spotify
                     }" target="_blank">
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
+                    </span>
                     <ol class="addResultText" id=${result.id}>
                     </ol>
                   </div>
@@ -2297,10 +2329,12 @@ function showAddResults (data, isLibrary, category) {
                     ${
                       result.album.release_date.trim() !== ''
                         ? `<p class="resultText fw-light fs-6">Released: ${result.album.release_date}</p>
+                          <span onclick="event.stopPropagation()">
                           <a class="btn btn-sm spotifyLink" href="${result.album.external_urls.spotify}"
                              target="_blank">
                           <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                           </a>
+                          </span>
                       </div>`
                         : `</div>`
                     }
@@ -2327,11 +2361,13 @@ function showAddResults (data, isLibrary, category) {
                     <p class="resultText">
                     ${oSet++}.  ${result.name}
                     </p>
+                    <span onclick="event.stopPropagation()">
                     <a class="btn btn-sm spotifyLink" href="${
                       result.external_urls.spotify
                     }" target="_blank">
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
+                    </span>
                     <ol class="addResultText" id=${result.id +
                       category.substring(15)}>
                     </ol>
