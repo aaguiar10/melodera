@@ -32,6 +32,7 @@ var o4 = null
 const jssdkscopes = [
   'streaming',
   'user-read-private',
+  'user-read-email',
   'user-modify-playback-state',
   'user-read-playback-state',
   'user-read-currently-playing',
