@@ -586,8 +586,13 @@ function getTopArtists (timeframe) {
                        }"
                        width="64" height="64">
                   <p class="resultText">
-                    ${index + 1}.  ${artist.name}
+                    ${index + 1}.  ${artist.name}target="_blank"
                   </p>
+                  <a class="btn btn-sm spotifyLink" href="${
+                    artist.external_urls.spotify
+                  }" target="_blank">
+                  <img src="images/spotify_logo.png" class="img-fluid" width="70px">
+                  </a>
                   <ol class="addResultText" id=${artist.id + '_' + timeframe}>
                   </ol>
                  </div>`

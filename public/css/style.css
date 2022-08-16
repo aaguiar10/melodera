@@ -541,6 +541,7 @@ p {
 }
 .spotifyLink:focus {
   outline-style: none;
+  box-shadow: none;
 }
 
 .trackOptions {
