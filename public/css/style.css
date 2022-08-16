@@ -527,9 +527,17 @@ p {
   overflow: auto;
 }
 .text-white:hover, .text-white-top:hover {
-  -moz-box-shadow: 0 0 10px #434B4E;
-  -webkit-box-shadow: 0 0 10px #434B4E;
-   box-shadow: 0 0 10px #434B4E;
+  -moz-box-shadow: 0 0 5px #434B4E;
+  -webkit-box-shadow: 0 0 5px #434B4E;
+   box-shadow: 0 0 5px #434B4E;
+}
+.spotifyLink {
+  padding-top: 0;
+}
+
+.spotifyLink:hover {
+  border-left: 0.9px solid #434B4E;
+  border-right: 0.9px solid #434B4E;
 }
 
 .trackOptions {
