@@ -405,9 +405,7 @@ function doneResizing (specialCase = false) {
           while (isNull) {
             isNull = checkNull()
           }
-          doneResizing(
-            true
-          ) /* do special case 
+          doneResizing(true) /* do special case 
                             for a clicked song from alternate client (free users) */
           return
         }
@@ -672,7 +670,7 @@ document
 
 function openVisSettings () {
   document.getElementById('visModalBody').innerHTML = `<p>
-  Known Issues: The visualizer can be buggy (moreso with free users), but refreshing the page usually fixes it.
+  Issues: If the visualizer misbehaves (moreso with Spotify free users), a page refresh should fix it.
   </p>
   <p>Spotify Premium users:</p>
   <p>Full usage of the site's features.
@@ -1159,9 +1157,7 @@ function drawAnalysis (data) {
             while (isNull) {
               isNull = checkNull()
             }
-            doneResizing(
-              true
-            ) /* do special case 
+            doneResizing(true) /* do special case 
                                 for a clicked song from alternate client (free users) */
             return
           } else if (data.item !== null) {
@@ -2368,8 +2364,9 @@ function showAddResults (data, isLibrary, category) {
                     <img src="images/spotify_logo.png" class="img-fluid" width="70px">
                     </a>
                     </span>
-                    <ol class="addResultText" id=${result.id +
-                      category.substring(15)}>
+                    <ol class="addResultText" id=${
+                      result.id + category.substring(15)
+                    }>
                     </ol>
                   </div>
                </div>`
@@ -2684,8 +2681,9 @@ function playVid (id) {
   checkExpir()
   if (player && profileInfo['subLevel'] !== 'open') {
     fetch(
-      `https://api.spotify.com/v1/me/player/play${deviceId &&
-        `?device_id=${deviceId}`}`,
+      `https://api.spotify.com/v1/me/player/play${
+        deviceId && `?device_id=${deviceId}`
+      }`,
       {
         method: 'PUT',
         body: JSON.stringify({ uris: [`spotify:track:${id}`], position_ms: 0 }),
