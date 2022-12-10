@@ -49,7 +49,7 @@ const redirectUriParameters = {
   client_id: process.env.CLIENT_ID,
   response_type: 'token',
   scope: jssdkscopes.join(' '),
-  redirect_uri: encodeURI('https://melodera.herokuapp.com/'),
+  redirect_uri: encodeURI('https://melodera.onrender.com/'),
   state: generateRandomString(16),
   show_dialog: true
 }
