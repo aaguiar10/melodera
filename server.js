@@ -3,6 +3,13 @@ var qs = require('querystring')
 var express = require('express')
 var Vibrant = require('node-vibrant')
 var app = express()
+require('dotenv').config()
+
+if (process.env.NODE_ENV == 'production') {
+  currentURI = 'https://melodera.up.railway.app/'
+} else {
+  currentURI = 'http://localhost:8888/'
+}
 
 // init Spotify API wrapper
 
@@ -49,7 +56,7 @@ const redirectUriParameters = {
   client_id: process.env.CLIENT_ID,
   response_type: 'token',
   scope: jssdkscopes.join(' '),
-  redirect_uri: encodeURI('https://melodera.onrender.com/'),
+  redirect_uri: encodeURI(currentURI),
   state: generateRandomString(16),
   show_dialog: true
 }
@@ -254,8 +261,9 @@ app.get('/newReleases', function (request, response) {
 })
 
 // listen for requests
-var listener = app.listen(process.env.PORT, function () {
-  console.log('Your app is listening on port ' + listener.address().port)
+var listener = app.listen(process.env.PORT || 8888, function () {
+  console.log('Available at ' + currentURI)
+  console.log('\nYour app is listening on port ' + listener.address().port)
 })
 
 /* some functions adapted from
