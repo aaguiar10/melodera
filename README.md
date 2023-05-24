@@ -1,10 +1,16 @@
 # Melodera
 
-Melodera visualizes and analyzes songs according to their musical properties.
+Melodera is an upgraded music player for Spotify that provides you with in-depth song information.
+
+Features include:
+
+- Identify musical attributes such as tempo and time signature
+- See song structures and add beat-moving visuals
+- Get song recommendations, view your listening habits, and more
 
 ## Installation
 
-This project uses NodeJS ([setup](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)).
+This project is built on [NextJS](https://nextjs.org/docs), which requires NodeJS ([setup](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)).
 Install the required node modules with
 
 ```bash
@@ -13,46 +19,39 @@ $ npm ci
 
 ## Testing
 
-For local testing, create an app from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/). Then within the app's settings, add a redirect URI such as `http://localhost:8888/` and save it.
+For local testing, create an app from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/). Then within the app's settings, add redirect URI `http://localhost:3000/api/auth/callback/spotify` and save it.
 
-Use the `Client ID` and `Client Secret` that Spotify provides to create a **.env** file (within the project folder) where you will store them:
+Use the `Client ID` and `Client Secret` that Spotify provides to create a **.env.local** file (within the project folder) where you will store them along with your site url and a generated secret for [authorization](https://next-auth.js.org/configuration/options):
 
 ```dosini
-CLIENT_ID=YOURCLIENTID
-CLIENT_SECRET=YOURCLIENTSECRET
-NODE_ENV=development
+NEXTAUTH_URL=http://localhost:3000
+SPOTIFY_CLIENT_ID=YOURCLIENTID
+SPOTIFY_CLIENT_SECRET=YOURCLIENTSECRET
+NEXTAUTH_SECRET=YOURSECRETKEY
 ```
 
-**server.js**:
+You can edit pages by modifying the `pages` directory. The page auto-updates as you edit the file.
 
-Update `currentURI` to the redirect URI you provided to Spotify
-
-```typescript
-// replace URI that matches your node environment in .env
-if (process.env.NODE_ENV == 'production') {
-  currentURI = 'https://melodera.up.railway.app/'
-} else {
-  currentURI = 'http://localhost:8888/'
-}
-```
-
-If you specify a server port, make sure to also update it in the listener variable
-
-```typescript
-// port 8888 in 'development' environment
-var listener = app.listen(process.env.PORT || 8888, function () {
-  console.log('Available at ' + currentURI)
-  console.log('\nYour app is listening on port ' + listener.address().port)
-})
-```
+[API routes](https://nextjs.org/docs/api-routes/introduction) can be edited in the `pages/api` directory
 
 ### Deployment
 
-Run the server with
+For a development server:
 
 ```bash
-$ npm start
+$ npm run dev
+# or
+$ yarn dev
+# or
+$ pnpm dev
+```
 
-#-----Alternative-----
-$ node server.js
+For a production server (after prepping with `npm run build`):
+
+```bash
+$ npm run start
+# or
+$ yarn start
+# or
+$ pnpm start
 ```
