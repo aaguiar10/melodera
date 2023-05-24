@@ -147,10 +147,12 @@ export default function FeaturesChart ({
     const width = featuresChart.width
     const height = featuresChart.height
 
-    sVisual.width = sVisual.offsetWidth
-    sVisual.height = sVisual.offsetHeight
+    sVisual.width = featuresChart.offsetWidth
+    sVisual.height = 200
 
-    const fChartCtx = featuresChart.getContext('2d')
+    const fChartCtx = featuresChart.getContext('2d', {
+      willReadFrequently: true
+    })
     setSVisualProps({
       ...sVisualProps,
       width: sVisual.width,
@@ -159,7 +161,7 @@ export default function FeaturesChart ({
       centerY: sVisual.height / 2,
       radius: featuresChart.height / 8
     })
-    const sVisualCtx = sVisual.getContext('2d')
+    const sVisualCtx = sVisual.getContext('2d', { willReadFrequently: true })
     featuresChart
       .getContext('2d')
       .clearRect(0, 0, featuresChart.width, featuresChart.height)
@@ -299,6 +301,7 @@ export default function FeaturesChart ({
     })
 
     let fChartImgData = null
+    let sVisualImgLoaded = false
     function provideAnimationFrame () {
       if (userInfo.subscription === 'free') {
         fetch('https://api.spotify.com/v1/me/player/currently-playing', {
@@ -363,7 +366,7 @@ export default function FeaturesChart ({
                   featuresChart.height
                 )
                 fChartCtx.putImageData(fChartImgData, 0, 0)
-                sVisualCtx.drawImage(sVisualImg, 0, 0)
+                if (sVisualImgLoaded) sVisualCtx.drawImage(sVisualImg, 0, 0)
                 fChartCtx.fillStyle = '#000'
                 fChartCtx.fillRect(markPosition, 0, 5, markerHeight)
                 animReq.current = requestAnimationFrame(provideAnimationFrame)
@@ -405,7 +408,7 @@ export default function FeaturesChart ({
                 featuresChart.height
               )
               fChartCtx.putImageData(fChartImgData, 0, 0)
-              sVisualCtx.drawImage(sVisualImg, 0, 0)
+              if (sVisualImgLoaded) sVisualCtx.drawImage(sVisualImg, 0, 0)
               fChartCtx.fillStyle = '#000'
               fChartCtx.fillRect(markPosition, 0, 5, markerHeight)
               animReq.current = requestAnimationFrame(provideAnimationFrame)
@@ -420,6 +423,9 @@ export default function FeaturesChart ({
 
     fChartImg.src = featuresChart.toDataURL('png')
     sVisualImg.src = sVisual.toDataURL('png')
+    sVisualImg.onload = function () {
+      sVisualImgLoaded = true
+    }
     fChartImg.onload = function () {
       fChartImgData = fChartCtx.getImageData(
         0,
@@ -688,6 +694,9 @@ export default function FeaturesChart ({
   } // after a delay, a function executes once
 
   useEffect(() => {
+    if (analysisData && featuresData && artCover) {
+      drawAnalysis(analysisData)
+    }
     function handleResize () {
       if (window.innerWidth < 476) {
         // dropdown view depending on device width
@@ -695,22 +704,13 @@ export default function FeaturesChart ({
       } else {
         setWindowSmall(false)
       }
-      if (!isPaused) funcs.pauseVid()
       doneResizing()
     }
     const debouncedResize = debounce(handleResize, 600)
     window.addEventListener('resize', debouncedResize)
     return () => {
+      cancelAnimationFrame(animReq.current)
       window.removeEventListener('resize', debouncedResize)
-    }
-  }, [isPaused])
-
-  useEffect(() => {
-    if (analysisData && featuresData && artCover) {
-      drawAnalysis(analysisData)
-      return () => {
-        cancelAnimationFrame(animReq.current)
-      }
     }
   }, [analysisData, featuresData, artCover])
 
