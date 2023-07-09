@@ -1365,13 +1365,13 @@ export default function Results ({
           onClick={() =>
             setToggledAdd({
               ...toggledAdd,
-              [playlist.id]:
-                toggledAdd[playlist.id] === undefined
+              [playlist?.id]:
+                toggledAdd[playlist?.id] === undefined
                   ? true
-                  : !toggledAdd[playlist.id]
+                  : !toggledAdd[playlist?.id]
             })
           }
-          key={playlist.id}
+          key={playlist?.id}
         >
           <div>
             <Image
@@ -1380,24 +1380,24 @@ export default function Results ({
                 margin: '10px auto 0px auto'
               }}
               src={
-                playlist.images.length === 0
+                playlist?.images.length === 0
                   ? MusicNote
-                  : playlist.images[0].url
+                  : playlist?.images[0].url
               }
               width={64}
               height={64}
               alt='Playlist Image'
             />
-            <p className='resultText'>{playlist.name}</p>
-            {playlist.description.trim() !== '' ? (
+            <p className='resultText'>{playlist?.name}</p>
+            {playlist?.description.trim() !== '' ? (
               <>
                 <p className='resultText fw-light fs-6'>
-                  {playlist.description.trim().replace(/<\/?[^>]+(>|$)/g, '')}
+                  {playlist?.description.trim().replace(/<\/?[^>]+(>|$)/g, '')}
                 </p>
                 <span onClick={e => e.stopPropagation()}>
                   <a
                     className='btn btn-sm spotifyLink'
-                    href={playlist.external_urls.spotify}
+                    href={playlist?.external_urls.spotify}
                     target='_blank'
                     rel='noreferrer'
                   >
@@ -1410,7 +1410,7 @@ export default function Results ({
                   </a>
                 </span>
                 <AddResult
-                  resultId={playlist.id}
+                  resultId={playlist?.id}
                   categ='plist'
                   userCountry={userCountry}
                   toggledAdd={toggledAdd}
@@ -1420,7 +1420,7 @@ export default function Results ({
               </>
             ) : (
               <AddResult
-                resultId={playlist.id}
+                resultId={playlist?.id}
                 categ='plist'
                 userCountry={userCountry}
                 toggledAdd={toggledAdd}

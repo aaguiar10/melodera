@@ -11,7 +11,7 @@ import MusicNote from '../public/images/music-note-beamed.svg'
 import Script from 'next/script'
 
 export default function Analysis () {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const [renderType, setRenderType] = useState({
     home: true,
     search: false,
@@ -258,7 +258,7 @@ export default function Analysis () {
             .then(res => res.json())
             .then(data => {
               let profilePic =
-                data.images?.length !== 0 ? data?.images?.[0].url : ''
+                data.images?.length !== 0 ? data?.images?.[1].url : ''
               setProfileInfo(profileInfo => ({
                 ...profileInfo,
                 prof_pic: profilePic,
@@ -344,6 +344,14 @@ export default function Analysis () {
       })
     }
   }, [session, status])
+
+  // Refresh session near every hour (if online)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (navigator.onLine) update()
+    }, 1000 * 60 * 59)
+    return () => clearInterval(interval)
+  }, [update])
 
   // Loading screen
   if (Object.keys(profileInfo).length === 0) {
