@@ -1,8 +1,48 @@
-import Image from 'next/image'
 import DefaultPic from '../public/images/default_pic.png'
+import Image from 'next/image'
+import { useContext } from 'react'
+import { AnalysisContext } from '../utils/context'
 
 // component for profile modal
-export default function ProfileLayout ({ profileInfo }) {
+export default function ProfileLayout () {
+  const [state] = useContext(AnalysisContext)
+  const renderProfileInfo = () => {
+    if (state.profileInfo.length === 0) {
+      return '...'
+    }
+
+    return (
+      <article className='card' style={{ maxWidth: '540px' }}>
+        <div className='row g-0'>
+          <div className='col-sm-4 text-center'>
+            <Image
+              src={
+                state.profileInfo.profPic !== ''
+                  ? state.profileInfo.profPic
+                  : DefaultPic
+              }
+              className='img-fluid rounded-start'
+              style={{ objectFit: 'contain' }}
+              alt='Profile Pic'
+              width={300}
+              height={300}
+            />
+          </div>
+          <div className='col-sm-8'>
+            <div className='card-body text-center'>
+              <h5 className='card-title'>{state.profileInfo.displayName}</h5>
+              <ul className='card-text' id='profInfoText'>
+                <li>Country: {state.profileInfo.userCountry}</li>
+                <li>Subscription: {state.profileInfo.subscription}</li>
+                <li>Followers: {state.profileInfo.followersCount}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+    )
+  }
+
   return (
     <>
       <div
@@ -26,40 +66,7 @@ export default function ProfileLayout ({ profileInfo }) {
               ></button>
             </div>
             <div className='modal-body' id='profModalBody'>
-              {profileInfo.length === 0 ? (
-                '...'
-              ) : (
-                <div className='card' style={{ maxWidth: '540px' }}>
-                  <div className='row g-0'>
-                    <div className='col-sm-4 text-center'>
-                      <Image
-                        src={
-                          profileInfo['prof_pic'] !== ''
-                            ? profileInfo['prof_pic']
-                            : DefaultPic
-                        }
-                        className='img-fluid rounded-start'
-                        style={{ objectFit: 'contain' }}
-                        alt='Profile Pic'
-                        width={300}
-                        height={300}
-                      />
-                    </div>
-                    <div className='col-sm-8'>
-                      <div className='card-body text-center'>
-                        <h5 className='card-title'>
-                          {profileInfo['displayName']}
-                        </h5>
-                        <ul className='card-text' id='profInfoText'>
-                          <li>Country: {profileInfo['userCountry']}</li>
-                          <li>Subscription: {profileInfo['subLevel']}</li>
-                          <li>Followers: {profileInfo['followersCount']}</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {renderProfileInfo()}
             </div>
           </div>
         </div>

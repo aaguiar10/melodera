@@ -1,54 +1,22 @@
-* {
+  * {
     box-sizing: border-box;
-}
+  }
 
-header {
+  header {
     width: 100%;
     text-align: center;
     background-color: transparent;
     color: slategray;
-      background-repeat: no-repeat;
-      background-position: center center;
-}
-  
-body {
-    background-color: #F5F0F0;
-    padding: 5vh 5vw;
-}
-  
-::backdrop
-{
-    background-color: #F5F0F0;
-}
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
 
-p {
+  ::backdrop {
+    background-color: #ffffff;
+  }
+
+  p {
     max-width: fit-content;
-}
-
-footer {
-    margin-top: 50px;
-    padding-top: 25px;
-    border-top: 1px solid lightgrey;
-}
-  
-footer > a {
-    color: #6E6E6E;
-}
-
-.d-block {
-    display: block !important;
-}
-
-.d-none {
-    display: none !important;
-}
-
-.loader, .loader:before, .loader:after {
-    border-radius: 50%;
-    width: 2.5em;
-    height: 2.5em;
-    animation-fill-mode: both;
-    animation: bblFadInOut 1.8s infinite ease-in-out;
   }
 
   .loader {
@@ -105,61 +73,38 @@ footer > a {
    
       
   #topNav {
-    background-color: rgba(228, 231, 235, 0.92);
+    -moz-box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 5%), 
+    inset 0 -1px 0 rgb(0 0 0 / 15%);
+    -webkit-box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 5%), 
+    inset 0 -1px 0 rgb(0 0 0 / 15%);
     box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 5%), 
     inset 0 -1px 0 rgb(0 0 0 / 15%);
   }
   
-  .tFrametitle {
+  .tFrameTitle, .msgTitle {
     margin: 15px auto auto auto;
   }
   
-  .msgTitle {
-    margin: 15px auto auto auto;
-  }
-  .siteTitle {
-    background-color: transparent;
-  }
-  
-  .siteName {
-    text-align: center;
-    width: fit-content;
-    vertical-align: middle;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 5px;
-    padding-right: 5px;
-    border: 4px solid slategray;
-  }
   #fullScreenBtn {
-    position: absolute;
-    top: 0;
-    right: 0;
     outline-style: none;
     box-shadow: none;
+    margin-left: auto;
+    width: fit-content;
   }
+
   #navItems {
     align-items: center;
     justify-content: space-around;
     flex-direction: row;
   }
   
-  #navItemsTop {
-    align-items: center;
-    justify-content: space-around;
-    flex-direction: row;
-    background-color: #ffffff;
-  }
-  
   #btn-back-to-top,
   #btn-sync {
     position: fixed;
-    bottom: 20px;
     left: 10px;
     z-index: 3;
     box-shadow: none;
     outline-style: none;
-    background-color: rgba(255, 255, 255, 0.4);
     border: 1px solid #212529;
   }
   
@@ -172,15 +117,13 @@ footer > a {
     background-color: rgba(255, 255, 255, 1);
   }
   
-  #navContainer {
-    max-width: 100%;
-  }
-  
   #nav-tog {
     border-style: none;
   }
   #homeAndTog {
     display: inline-flex;
+    align-items: center;
+    width: 100%;
   }
   #nav-tog:focus {
     border-style: none;
@@ -199,7 +142,7 @@ footer > a {
   }
   
   #searchBtn {
-    background-color: slategray;
+    background-color: #766780;
     font-size: 15px;
     border-top-right-radius: 25px;
     border-bottom-right-radius: 25px;
@@ -211,48 +154,16 @@ footer > a {
   #searchBtn:hover  {
     outline: none;
     box-shadow: none;
-    background-color: #30A8A8;
+    background-color: #5E5266;
     transition: 0.8s;
   }
   
   .dividerLine {
-    margin-top: 50px;
     height: 2px;
     border-width: 0;
-    color: gray;
     background-color: gray;
   }
   
-  .moreBtn {
-    display: flex;
-    color: #212529;
-    border-color: #212529;
-    margin: 0 auto;
-  }
-   
-  .moreBtn:hover, 
-  .moreBtn:active  {
-    outline-style: none;
-    box-shadow: none;
-    color: #212529;
-    background-color: #ffffff;
-    border: 1px solid #212529;
-  }
-  
-  .moreBtn:focus {
-    outline-style: none;
-    box-shadow: none;
-  }
-  
-  #btnTopTracksCateg,
-  #btnTopArtistsCateg,
-  #btnFeatPlistsCateg,
-  #btnNewRelsCateg{
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-  }
   
   #profDropdown {
     width: 100%;
@@ -261,22 +172,11 @@ footer > a {
   }
   
   #toastDiv {
-    z-index: 5;
+    margin: auto 6rem 7rem auto;
   }
 
-  #saveSongToast,
-  #addToPlistToast {
+  .trackOptionsToast {
     width: fit-content;
-  }
-  
-  #branding {
-    width: fit-content;
-    margin: 0;
-  }
-  
-  #popup1 {
-    -webkit-box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
-    box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
   }
   
   .btn-aubergine{color:#ffffff !important;background-color:#503750 !important}
@@ -290,7 +190,7 @@ footer > a {
     box-shadow: none;
     outline-style: none;
   }
-  .btn-aubergine:active{background-color:#402c40;box-shadow:none}
+  .btn-aubergine:active{background-color:#402c40 !important;box-shadow:none;}
   
   #profpic {
     width: 32px;
@@ -301,150 +201,63 @@ footer > a {
     margin: auto;
   }
   
-  
-   @media only screen and (max-width:475px){ 
-  
-    /*#searchTrack input {
-      width: 125px !important;
-      
-    } */
-     
-     #play {
-      grid-template-columns: minmax(0,auto) !important;
-      grid-template-rows: 
-        minmax(0,25vw) 
-        minmax(0, 20vw) minmax(0,max-content)
-        minmax(0,max-content) minmax(0,30vw) 
-        minmax(0, max-content) !important;
-     }
-  
-  }
-  
   .logo-nav {
     -o-object-fit: contain;
     object-fit: contain;
   }
   
-  #cover_and_play {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    flex-flow: row;
-  }
-  
-  #displaysong {
-    display: flex;
-    align-content: center;
-    justify-content: center;
-  }
-  
-  #displaysongstuff {
-    align-self: center;
-  }
-  
-  .bpmKey {
-    text-align: center;
-    max-width: 300px;
-    margin: auto;
-    font-size: large;
-  } 
-  #keyOfT, #domPitch {
-    font-weight: bold;
-  }
-  #play {
-    display: grid;
-    width: 100%; 
-    height: auto;
-    grid-template-columns: auto auto;
-    grid-template-rows: auto auto auto;
-    overflow: auto;
-    margin-top: 5px;
-  } 
-  #pause {
-    text-align: justify;
-    width: 100px;
-    margin:auto auto;
-  } 
-  
-  /*#searchTrack input {
-    width: 250px;
-  } */
-  
-  #searchTrack {
-    width: 100%;
-  }
-  
   @media (max-width: 576px) {
-    #srchAndForm {
-      justify-content: center;
-      align-items: center;
-    }
-  
-    .searched {
-      justify-content: center;
-    }
     .searchCateg {
       width: fit-content !important;
     }
-    #fullScreenBtn {
-      display: none;
-    }
-    #homeAndTog {
-      width: 100%;
-      justify-content: space-evenly;
+    #showSimBtn, #add2PlistBtn {
+      padding: 0.5rem .5rem !important;
     }
   }
+  @media screen and (max-width: 992px) {
+    #toastDiv {
+      margin: auto auto 7rem auto;
+    }
+  }
+
   #profInfoText {
     list-style-type: none;
     padding: 0;
   }
-  #results {
-    display: flex;
-    width: 100%;
-    height: auto;
-    align-items: center;
-    flex-direction: column;
-    flex-wrap: wrap;
-    margin: 10px auto;
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  #results .text-white > div,
-  #results .text-white-top > div {
-    cursor: pointer;
-    border:none; 
-    width: 300px; 
-    height: auto;                    
-    background-color: white; 
-    color:black;                  
-    margin: 0 auto;
-  }
+
   .searchCateg {
     outline-style: none;
-    margin-top: 25px;
-    color: #616467;
-    box-shadow: 0 0 0 2px #616467 inset;
+    margin-top: 1.5rem;
+    color: #525366;
+    -moz-box-shadow: 0 0 0 2px #525366 inset;
+    -webkit-box-shadow: 0 0 0 2px #525366 inset;
+    box-shadow: 0 0 0 2px #525366 inset;
     background-color: transparent;
     width: 25vw;
-    border: none;
+    border: 0;
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
   }
   
   .searchCateg:hover {
     outline-style: none;
     box-shadow: none;
     color: #ffffff;
-    background-color: #616467;
+    background-color: #525366;
   }
   
   .searchCateg:focus {
-    box-shadow: 0 0 0 2px #616467 inset;
+    -moz-box-shadow: 0 0 0 2px #525366 inset;
+    -webkit-box-shadow: 0 0 0 2px #525366 inset;
+    box-shadow: 0 0 0 2px #525366 inset;
   }
   
   .activeCateg {
     outline-style: none;
     color: #ffffff;
-    background-color: #616467;
+    background-color: #525366;
   }
   
   .searchCateg:active {
@@ -456,27 +269,15 @@ footer > a {
   .searched {
     display: inline-flex;
     width: 100%;
-    justify-content: space-evenly;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    margin-top: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .searchedAlt {
-    display: inline-flex;
-    width: 100%;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin: 15px auto 20px auto;
   }
+
   .resultText {
-    text-align: center;
-    margin: 0 auto;
-    padding: 1px;
-    overflow: scroll;
+    padding: 0.25rem 1rem;
+    width: 100%;
   }
   
   .resultText > a {
@@ -485,92 +286,68 @@ footer > a {
     text-decoration: inherit;
   }
   
+  .resultTextInfo {
+    overflow-y: auto;
+    max-height: 75px;
+  }
+  
   .addResultText {
-    max-width: 275px;
+    width: 100%;
     max-height: 150px;
     overflow: scroll;
-    margin: 0 auto;
+    margin: 0.25rem auto 0;
     padding: 0;
   }
   .addResultText > li {
     font-weight: normal;
     font-size: medium;
-    border-top: 1px solid black;
-    border-left: 1px solid black;
-    border-right: 1px solid black;
+    border-top: 1px solid var(--bs-dark);
+    background-color: white;
+    padding: 0.25rem 1rem;
   }
-  
+  .addResultText > li:hover {
+    background-color: inherit;
+  }
   .addResultText > p {
     font-weight: normal;
     font-size: medium;
     margin: 0 auto;
   }
   
-  #timer {
-    font-size: x-large; 
-    float: left; 
-    margin: 0px 0px 0px 10px;
-  }
-  
-  .text-white {
-    width: fit-content;
-    height: fit-content;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: 500;
-    font-size: large;
-    background-color: #434B4E;
-    padding-top:10px;
-    padding-right:10px;
-    padding-bottom:10px;
-    padding-left:10px;
-    display: flex;
-    margin: 0px 0px 10px 0px;
-    overflow: auto;
-  }
-  
   .text-white-top {
-    width: fit-content;
-    height: fit-content;
+    cursor: pointer;
+    color: black;
+    width: 256px;
+    height: auto;
     text-align: center;
-    border-radius: 5px;
+    border-radius: 10px;
     font-weight: 500;
     font-size: large;
-    background-color: #434B4E;
-    padding-top:10px;
-    padding-right:10px;
-    padding-bottom:10px;
-    padding-left:10px;
     display: flex;
-    margin: 0px 10px 10px 10px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0px 15px 15px 15px;
     overflow: auto;
+    border: 5px solid var(--bs-dark);
+    -webkit-transition: background-color 1.2s ease-in, border-color 1.2s ease-in;
+    -moz-transition: background-color  1.2s ease-in, border-color 1.2s ease-in;
+    transition: background-color  1.2s ease-in, border-color 1.2s ease-in;
   }
-  .text-white:hover, .text-white-top:hover {
+  .text-white-top:hover {
     -moz-box-shadow: 0 0 5px #434B4E;
     -webkit-box-shadow: 0 0 5px #434B4E;
      box-shadow: 0 0 5px #434B4E;
   }
-  .spotifyLink {
-    padding-top: 0;
-  }
-  
+
   .spotifyLink:hover {
     border-left: 1px solid #434B4E;
     border-right: 1px solid #434B4E;
   }
+
   .spotifyLink:focus {
     outline-style: none;
     box-shadow: none;
-  }
-  
-  .trackOptions {
-      margin-left: 10px;
-      height: 100%;
-      width: fit-content;
-  }
-  
-  #add2PlistBtn {
-    border-top-right-radius: 0 !important;
   }
   
   #plistOptions {
@@ -578,119 +355,43 @@ footer > a {
     overflow: scroll;
   }
 
-  .playpausebutton {
-    float: left; 
-    margin-left: 10px;
-    align-self: center;
-    height: 100%;
-    display: flex;
-  }
-  
-  #playedButton, #pausedButton {
-    align-self: center;
-  }
-  #bpmdisplay {
-    margin: auto;
-    max-width: 100%;
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-  .displaybpm {
-    display: flex;
-    justify-content: center;
-    height: 100%;
-  }
   #BPM {
       font-weight: bold;
-      font-size: x-large;
-      background-color: #202020;
+      font-size: large;
       color: white;
-      margin: auto;
-      padding-top: 5px;
-      padding-right: 20px;
-      padding-bottom: 5px;
-      padding-left: 20px;
+      padding: 0.25rem 0.5rem;
   }
   
-  @media screen and (max-width: 900px) {
-    #cover_and_play {
-      flex-flow: column;
-    }
-    .playpausebutton {
-      margin: auto;
-    }
-    #bpmdisplay {
-      margin: auto;
-    }
-    .trackOptions {
-      margin: auto;
-    }
-    #displaysongstuff {
-      display: flex;
-      justify-content: center;
-    }
-    #timer {
-      margin: auto;
-    }
-    #hideSongs {
-      justify-content: center;
-    }
-  }
   
-  #albumart {
-    color: white;
-    border: 5px inset #434B4E;
-    background-color: black;
-    padding: 10px;
-    margin: 10px;
-    text-align: center;
+  .track-description {
+    width: fit-content;
+    height: fit-content;
   }
   
   #homeBtn {
+    opacity: 0.9;
     cursor: pointer;
-    margin-right: 0.5rem;
     padding-top: 0;
     padding-bottom: 0;
-    border: none;
+    border: 0;
     background-color: transparent;
+
+  }
+
+  #homeBtn:hover {
+    opacity: 1;
+    transition: all 550ms cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  #homeBtn.active {
+    opacity: 1;
   }
   
-  #homeBtn.active:hover {
-      opacity: .75;
-      transition: all 550ms cubic-bezier(0.19, 1, 0.22, 1);
-  }
-  
-  #librBtn {
-    cursor: pointer;
-    box-shadow: none;
-    outline-style: none;
-    background: none;
-    border: none;
-  
-  }
-  
-  #topOptionsDropdown {
-    text-align: center;
-    box-shadow: none;
-    outline-style: none;
-    background: none;
-    border: none;
-  }
-  #olTopArtists, #olTopTracks {
-    padding: 0;
-  }
-  
-  #artcover {
-    border: 5px solid black;
-    display: flex;
-    align-items: center;
-  }
   
   #artcover:hover {
-    -moz-box-shadow: 0 0 10px #2F4F4F;
-    -webkit-box-shadow: 0 0 10px #2F4F4F;
-     box-shadow: 0 0 10px #2F4F4F;
+    -moz-box-shadow: 0 0 0.5rem #2F4F4F;
+    -webkit-box-shadow: 0 0 0.5rem #2F4F4F;
+     box-shadow: 0 0 0.5rem #2F4F4F;
   }
   
   #features-chart {
@@ -702,7 +403,6 @@ footer > a {
     bottom: 0;
     left: 0;
     right: 0;
-    margin:auto;
   }
   
   #features-chart:hover {
@@ -711,57 +411,124 @@ footer > a {
   
   #song-visual {
     width: 100%;
+    height: auto;
     min-height: 200px;
     position: relative;
     top:0;
     bottom: 0;
     left: 0;
     right: 0;
-    margin:auto;
-  }
-  .connection {
-    animation: 'Connection' 5s ease infinite
-  }
-  
-  
-  .no-connection {
-    animation: 'noConnection' 5s ease infinite
-  }
-  
-  .played {
-    outline-style:none;
-    border: 0;
-    background: transparent;
-    box-sizing: border-box;
-    width: 0;
-    height: 74px;
-    border-color: transparent transparent transparent #202020;
-    transition: 100ms all ease;
-    cursor: pointer;
-    border-style: double;
-    border-width: 0px 0 0px 60px;
-  }
-  .paused {
-    outline-style:none;
-    border: 0;
-    background: transparent;
-    box-sizing: border-box;
-    width: 0;
-    height: 74px;
-    border-color: transparent transparent transparent #202020;
-    transition: 100ms all ease;
-    cursor: pointer;
-    border-style: solid;
-    border-width: 37px 0 37px 60px;
-  }
-  .played:hover {
-    border-color: transparent transparent transparent #404040;
-  }
-  .paused:hover {
-    border-color: transparent transparent transparent #404040;
   }
 
+  .player-btn {
+    width: fit-content;
+    height: fit-content;
+  }
+
+  .player-btn-bg-lighten {
+    padding: 0 .5rem;
+    height: fit-content;
+    border: 0;
+    background: transparent !important;
+    color: var(--bs-white) !important;
+    font-size: 4rem;
+  }
+  .player-btn-bg-lighten:hover, 
+  .player-btn-bg-lighten:active, 
+  .player-btn-bg-lighten:focus {
+    transition: 0.5s;
+    background: transparent !important;
+    color: rgba(255, 255, 255, .5) !important;
+  }
+
+  .skip-btn {
+    font-size: 3rem;
+  }
+
+
   #features-chart-container {
-    display: grid;
-    border: 2px solid black;
+    display: flex;
+    flex-flow: column;
+    margin: 5vh 5vw 250px;
+  }
+
+  #addInPlistHeader {
+    cursor: pointer;
+  }
+  #addInPlistHeader:hover {
+    background-color: var(--bs-dropdown-link-hover-bg);
+  }
+
+  #save-track-btn {
+    width: fit-content;
+    height: fit-content;
+    background-color: transparent;
+    padding: 0;
+    border: 0;
+  }
+
+  #showSimBtn, #add2PlistBtn {
+    padding: 0.5rem 2rem;
+  }
+  
+
+  @supports (-webkit-touch-callout: none) {
+    /* iOS devices */ 
+    #volume-div {
+      display: none;
+    }
+  }
+  .inputRange {
+    background-color: rgba(33, 37, 41, 0.6);
+    height: 0.5rem;
+    background-image: linear-gradient(0deg, var(--bs-white), var(--bs-white));
+    background-size: 50% 100%;
+    background-repeat: no-repeat;
+    border-radius: 1rem !important;
+  }
+
+  .inputRange:hover {
+    background-image: linear-gradient(0deg, var(--range-bg), var(--range-bg));
+  }
+
+  .inputRange::-webkit-slider-runnable-track {
+    background: none !important;
+  }
+  .inputRange::-moz-range-track {
+    background: none !important;
+  }
+  .inputRange::-webkit-slider-thumb {
+    background: none !important;
+    box-shadow: none !important;
+  } 
+  .inputRange::-moz-range-thumb {
+    background: none !important;
+    box-shadow: none !important;
+  }
+  .inputRange:hover::-webkit-slider-thumb {
+    background-color: var(--bs-white) !important;
+  }
+  .inputRange:hover::-moz-range-thumb {
+    background-color: var(--bs-white) !important;
+  }
+
+  .addResultItem:hover {
+    background-color: var(--bs-dark) !important;
+    color: var(--bs-light) !important;
+  }
+
+
+  #bottom-player {
+    height: auto;
+    overflow-y: scroll;
+    background: #c31432;  /* fallback for old browsers */
+    background: linear-gradient(to bottom, var(--bottom-player-bg), var(--bs-dark));
+  }
+
+  #expandBtn {
+    background: none;
+    box-shadow: none;
+    border: none;
+    position: fixed;
+    right: 0;
   }

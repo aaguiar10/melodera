@@ -1,5 +1,6 @@
 import Head from 'next/head'
 
+// component for the head tag
 export default function HeadLayout ({
   title = 'default title',
   description = 'default-description'
@@ -30,7 +31,7 @@ export default function HeadLayout ({
           sizes='16x16'
           href='/images/icons/favicon-16x16.png'
         />
-        <link rel='manifest' href='/site.webmanifest' />
+        <link rel='manifest' href='/manifest.manifest' />
       </Head>
     </>
   )

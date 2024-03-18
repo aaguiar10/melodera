@@ -19,19 +19,24 @@ module.exports = {
       {
         content: [
           './pages/**/*.{js,jsx,ts,tsx}',
-          './components/**/*.{js,jsx,ts,tsx}'
+          './components/**/*.{js,jsx,ts,tsx}',
+          './node_modules/react-bootstrap/**/*.{js,jsx,ts,tsx}',
+          './node_modules/bootstrap/**/*.{js,jsx,ts,tsx}'
         ],
         defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
         safelist: {
-          standard: ['html', 'body', 'sticky-top'],
+          standard: ['html', 'body'],
           deep: [
+            /^row/,
+            /^col/,
             /^navbar/,
             /^nav/,
             /^collapse/,
             /^dropdown/,
             /^container/,
             /^btn/,
-            /^toast/
+            /^toast/,
+            /^alert/
           ]
         }
       }

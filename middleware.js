@@ -2,17 +2,18 @@ import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 
 export async function middleware (req) {
-  // when user is logged in, valid token
   const token = await getToken({ req })
-  if (req.nextUrl.pathname.startsWith('/api/auth') || token) {
+  const { pathname } = req.nextUrl
+
+  // valid token, continue with the request
+  if (token || pathname.startsWith('/api/auth')) {
     return NextResponse.next()
   }
 
   // invalid token, redirect user to index
   if (
     !token &&
-    (req.nextUrl.pathname.startsWith('/analysis') ||
-      req.nextUrl.pathname.startsWith('/api'))
+    (pathname.startsWith('/analysis') || pathname.startsWith('/api'))
   ) {
     return NextResponse.redirect(new URL('/', req.url))
   }

@@ -4,7 +4,7 @@ export default async function handler (req, res) {
   spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
   try {
     const data = await spotifyApi.getMySavedAlbums({
-      limit: 4,
+      limit: 10,
       offset: req.query.offset,
       market: req.query.market
     })

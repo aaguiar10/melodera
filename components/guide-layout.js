@@ -1,33 +1,38 @@
-import Image from 'next/image'
-import CircleExample from '../public/images/circ_ex.png'
-import TriangleExample from '../public/images/tri_ex.png'
-import SquareExample from '../public/images/sq_ex.png'
+import PanoExample from '../public/images/pano_ex.png'
+import OrbExample from '../public/images/orb_ex.png'
+import PyramidExample from '../public/images/pyramid_ex.png'
+import BlockExample from '../public/images/block_ex.png'
 import PlayerImg from '../public/images/melodera-player.png'
+import PaletteImg from '../public/images/palette.png'
+import Image from 'next/image'
+import { useContext } from 'react'
+import { AnalysisContext } from '../utils/context'
 
 // component for guide section
-export default function GuideLayout ({ visState, setVisState }) {
-  function removeBeatVis () {
-    if (visState) setVisState(false)
+export default function GuideLayout () {
+  const [state, setState] = useContext(AnalysisContext)
+
+  function removeVisual () {
+    if (state.visState.on) {
+      setState(prevState => ({
+        ...prevState,
+        visState: { on: false, type: '' }
+      }))
+    }
   }
 
-  function circVis () {
-    if (!visState) setVisState(true)
-    localStorage.setItem('beat_visualizer_type', 'circle')
-  }
-
-  function triVis () {
-    if (!visState) setVisState(true)
-    localStorage.setItem('beat_visualizer_type', 'triangle')
-  }
-
-  function sqVis () {
-    if (!visState) setVisState(true)
-    localStorage.setItem('beat_visualizer_type', 'square')
-  }
-
-  function mixVis () {
-    if (!visState) setVisState(true)
-    localStorage.setItem('beat_visualizer_type', 'mix')
+  function handleVisual (id) {
+    let visType = ''
+    if (id === 'panoVisual') visType = 'panorama'
+    else if (id === 'orbVisual') visType = 'orb'
+    else if (id === 'pyrVisual') visType = 'pyramid'
+    else if (id === 'blockVisual') visType = 'block'
+    if (!state.visState.on || state.visState.type !== visType) {
+      setState(prevState => ({
+        ...prevState,
+        visState: { on: true, type: visType }
+      }))
+    }
   }
 
   return (
@@ -43,7 +48,7 @@ export default function GuideLayout ({ visState, setVisState }) {
           <div className='modal-content'>
             <div className='modal-header'>
               <h5 className='modal-title' id='visModalTitle'>
-                How It Works
+                Guide
               </h5>
               <button
                 type='button'
@@ -53,20 +58,27 @@ export default function GuideLayout ({ visState, setVisState }) {
               ></button>
             </div>
             <div className='modal-body' id='visModalBody'>
-              <p>Spotify Premium users:</p>
-              <p>Full usage of the site&apos;s features.</p>
-              <p>Free users:</p>
-              <p>
-                Limited usage due to Spotify&apos;s restrictions. Must use the
-                official Spotify app to control audio, but can nonetheless view
-                the song breakdown and visualizer by clicking the music icon{' '}
-                <i className='bi bi-music-note-beamed' /> in the bottom left of
-                the screen (visible for Free users) to sync the app with
-                Melodera. If it is syncing incorrectly, reclick{' '}
+              <p className='mx-auto'>---- Spotify Premium users ----</p>
+              <p className='mx-auto'>Full usage of the site&apos;s features.</p>
+              <p className='mx-auto'>---- Free users ----</p>
+              <p className='mx-auto text-center'>
+                The official Spotify app is required to control audio. Sync
+                Melodera with Spotify&apos;s audio playback by selecting the
+                music icon <i className='bi bi-music-note-beamed' /> (visible to
+                Free users). If it is syncing incorrectly, reclick{' '}
                 <i className='bi bi-music-note-beamed' /> or rechoose the song
                 from the Spotify app.
               </p>
               <Image src={PlayerImg} className='img-fluid' alt='Player Guide' />
+              <div className='text-center p-3'>
+                Each color in <span className='fw-bold'>Pitch</span> represents
+                a pitch class
+              </div>
+              <Image
+                src={PaletteImg}
+                className='img-fluid'
+                alt='Color Palette'
+              />
             </div>
             <div className='modal-footer justify-content-center'>
               <button
@@ -75,7 +87,7 @@ export default function GuideLayout ({ visState, setVisState }) {
                 data-bs-target='#customModal'
                 data-bs-toggle='modal'
               >
-                Visualizer Settings (Experimental)
+                Visualizer Settings
               </button>
             </div>
           </div>
@@ -92,7 +104,7 @@ export default function GuideLayout ({ visState, setVisState }) {
           <div className='modal-content'>
             <div className='modal-header'>
               <h5 className='modal-title' id='customModalTitle'>
-                Shape of Visuals
+                Visualizer
               </h5>
               <button
                 type='button'
@@ -102,53 +114,54 @@ export default function GuideLayout ({ visState, setVisState }) {
               ></button>
             </div>
             <div className='modal-body' id='customModalBody'>
-              <div className='d-grid gap-2 col-4 mx-auto'>
-                <button
-                  className='btn btn-primary visualizer-btns'
-                  type='button'
-                  id='circVisual'
-                  onClick={circVis}
-                >
-                  Circle
-                </button>
+              <div className='d-grid gap-2 mx-auto'>
                 <Image
-                  src={CircleExample}
+                  src={PanoExample}
                   className='img-fluid'
-                  alt='Circle Image'
+                  alt='Panorama Image'
                 />
                 <button
                   className='btn btn-primary visualizer-btns'
                   type='button'
-                  id='triVisual'
-                  onClick={triVis}
+                  id='panoVisual'
+                  onClick={e => handleVisual(e.currentTarget.id)}
                 >
-                  Triangle
+                  Panorama
+                </button>
+                <Image src={OrbExample} className='img-fluid' alt='Orb Image' />
+                <button
+                  className='btn btn-primary visualizer-btns'
+                  type='button'
+                  id='orbVisual'
+                  onClick={e => handleVisual(e.currentTarget.id)}
+                >
+                  Orb
                 </button>
                 <Image
-                  src={TriangleExample}
+                  src={PyramidExample}
                   className='img-fluid'
-                  alt='Triangle Image'
+                  alt='Pyramid Image'
                 />
                 <button
                   className='btn btn-primary visualizer-btns'
                   type='button'
-                  id='sqVisual'
-                  onClick={sqVis}
+                  id='pyrVisual'
+                  onClick={e => handleVisual(e.currentTarget.id)}
                 >
-                  Square
+                  Pyramid
                 </button>
                 <Image
-                  src={SquareExample}
+                  src={BlockExample}
                   className='img-fluid'
-                  alt='Square Image'
+                  alt='Block Image'
                 />
                 <button
                   className='btn btn-primary visualizer-btns'
                   type='button'
-                  id='mixVisual'
-                  onClick={mixVis}
+                  id='blockVisual'
+                  onClick={e => handleVisual(e.currentTarget.id)}
                 >
-                  The Mix
+                  Block
                 </button>
               </div>
             </div>
@@ -162,9 +175,9 @@ export default function GuideLayout ({ visState, setVisState }) {
               </button>
               <button
                 className='btn btn-primary'
+                type='button'
                 id='remove-vis-btn'
-                data-bs-dismiss='modal'
-                onClick={removeBeatVis}
+                onClick={removeVisual}
               >
                 Remove Visuals
               </button>

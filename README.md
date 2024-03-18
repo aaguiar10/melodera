@@ -10,7 +10,7 @@ Features include:
 
 ## Installation
 
-This project is built on [NextJS](https://nextjs.org/docs), which requires NodeJS ([setup](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)).
+This project is built on [NextJS](https://nextjs.org/docs), which requires NodeJS 18.7 or later ([setup](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)).
 Install the required node modules with
 
 ```bash

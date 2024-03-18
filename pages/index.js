@@ -1,63 +1,78 @@
-import Image from 'next/image'
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import HeadLayout from '../components/head-layout'
 import styles from '../styles/Home.module.css'
 import LogoPic from '../public/images/melodera-logo.png'
+import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect } from 'react'
-import HeadLayout from '../components/head-layout'
 import { getProviders, signIn } from 'next-auth/react'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './api/auth/[...nextauth]'
 
+// starting page
 export default function Home ({ providers }) {
-  useEffect(() => {
-    localStorage.setItem('beat_visualizer_state', JSON.stringify(false)) // default vis state
-    localStorage.setItem('beat_visualizer_type', '') // default vis type
-  }, [])
-
   return (
     <>
       <HeadLayout
         title='Melodera'
         description='Login page. Analyze songs, get recommendations, and view your listening habits'
       />
-      <header>
-        <h1>
-          <Image
-            className='img-fluid'
-            id='login-logo'
-            src={LogoPic}
-            alt='logo'
-            priority
-          />
-          Melodera
-        </h1>
-        <p style={{ fontSize: 'x-large', margin: '0 auto' }}>
-          Learn about your listening habits, analyze songs, and more!
-        </p>
-      </header>
-      <main>
-        <div className='text-center'>
-          <div className='fs-6 mt-2 mb-3' style={{ fontWeight: 500 }}>
-            Currently available for Spotify Users
-          </div>
-          {Object.values(providers).map(provider => (
-            <button
-              id='login'
-              className={`${styles['btn']} ${styles['btn-sm']} ${styles['btn-green']}`}
-              onClick={() => signIn(provider.id, { callbackUrl: '/' })}
-              key={provider.name}
+      <Container fluid className='vh-100'>
+        <Row className='h-100 align-items-center'>
+          <Col className='text-center'>
+            <Row>
+              <Col>
+                <Image
+                  className='img-fluid'
+                  src={LogoPic}
+                  alt='logo'
+                  width={300}
+                  height={300}
+                  priority
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Col
+                style={{
+                  fontSize: 'x-large',
+                  color: '#525366'
+                }}
+              >
+                Learn about your listening habits, analyze songs, and more!
+              </Col>
+            </Row>
+            <Row className='mt-4 gap-4 justify-content-center'>
+              <div style={{ fontWeight: 500 }}>
+                Currently available for Spotify Users
+              </div>
+              {Object.values(providers).map(provider => (
+                <button
+                  style={{ width: 'fit-content' }}
+                  className={`${styles['btn']} ${styles['btn-sm']} ${styles['btn-green']}`}
+                  onClick={() => signIn(provider.id, { callbackUrl: '/' })}
+                  key={provider.name}
+                >
+                  Get started
+                </button>
+              ))}
+            </Row>
+          </Col>
+          <footer
+            className='text-center mt-4 pt-4'
+            style={{ borderTop: '1px solid lightgray' }}
+          >
+            Created by{' '}
+            <Link
+              className='link-secondary'
+              href='https://www.linkedin.com/in/armani-aguiar/'
             >
-              Get started
-            </button>
-          ))}
-        </div>
-      </main>
-      <footer className='text-center'>
-        Created by{' '}
-        <Link href='https://www.linkedin.com/in/armani-aguiar/'>
-          Armani Aguiar
-        </Link>
-      </footer>
+              Armani Aguiar
+            </Link>
+          </footer>
+        </Row>
+      </Container>
     </>
   )
 }

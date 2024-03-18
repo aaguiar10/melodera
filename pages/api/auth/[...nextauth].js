@@ -5,9 +5,9 @@ import SpotifyProvider from 'next-auth/providers/spotify'
 // https://next-auth.js.org/configuration/options
 async function refreshAccessToken (token) {
   try {
-    spotifyApi.setAccessToken(token.accessToken)
     spotifyApi.setRefreshToken(token.refreshToken)
     const { body: refreshedToken } = await spotifyApi.refreshAccessToken()
+    spotifyApi.setAccessToken(refreshedToken.access_token)
     return {
       ...token,
       accessToken: refreshedToken.access_token,
@@ -55,18 +55,19 @@ export const authOptions = {
           username: account.providerAccountId,
           accessTokenExpires: account.expires_at * 1000
         }
-      }
-      // return access token if it has not expired
-      if (Date.now() < token.accessTokenExpires) {
+      } // return access token if it has not expired
+      else if (Date.now() < token.accessTokenExpires) {
         return token
+      } else {
+        // refresh token since access token expired
+        return await refreshAccessToken(token)
       }
-      // refresh token since access token expired
-      return await refreshAccessToken(token)
     },
     async session ({ session, token }) {
       session.user.accessToken = token.accessToken
       session.user.refreshToken = token.refreshToken
       session.user.username = token.username
+      session.expires = token.accessTokenExpires
       return session
     }
   }

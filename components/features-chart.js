@@ -1,25 +1,18 @@
-import Link from 'next/link'
-import NextImage from 'next/image'
-import { useEffect, useRef, useState, Fragment } from 'react'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
-import SpotifyLogo from '../public/images/spotify_logo.png'
-import Dropdown from 'react-bootstrap/Dropdown'
+import BottomPlayer from './bottom-player'
 import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import { useEffect, useRef, useState, useContext } from 'react'
+import { AnalysisContext } from '../utils/context'
+import { useSession } from 'next-auth/react'
+import { resumeTrack, pauseTrack, syncPlayer } from '../utils/funcs'
 
-export default function FeaturesChart ({
-  funcs,
-  artCover,
-  isPaused,
-  token,
-  player,
-  analysisData,
-  featuresData,
-  fChartState,
-  userInfo,
-  spotifyObj
-}) {
-  const [windowSmall, setWindowSmall] = useState(null)
+// component for the features chart
+export default function FeaturesChart () {
+  const { data: session } = useSession()
+  const [state, setState, player] = useContext(AnalysisContext)
   const animReq = useRef(null)
   const resizeEvent = useRef(false)
   const featuresChartContainer = useRef(null)
@@ -36,24 +29,87 @@ export default function FeaturesChart ({
     centerY: null,
     radius: null
   })
+  const [windowSmall, setWindowSmall] = useState(null)
   const [currPosition, setCurrPosition] = useState(null)
   const [pitchCounter, setPitchCounter] = useState(0)
   const [beatCounter, setBeatCounter] = useState(0)
   const prevBeatCounter = useRef(0)
-  const [timer, setTimer] = useState(null)
+  const [timer, setTimer] = useState({ progress: 0, duration: 1 })
   const [dominantPitch, setDominantPitch] = useState(null)
-  const [showSaveSongToast, setShowSaveSongToast] = useState(false)
-  const [showAddToPlistToast, setShowAddToPlistToast] = useState(false)
+  const [showSongToast, setShowSongToast] = useState({
+    added: false,
+    removed: false
+  })
+  const [showPlistToast, setShowPlistToast] = useState({
+    added: false,
+    removed: false
+  })
+  const [showDisabledToast, setShowDisabledToast] = useState(false)
   const featuresChartRef = useRef(null)
   const songVisualRef = useRef(null)
   const colors = [
-    'rgba(238, 229, 107, 1)',
-    'rgba(242, 187, 143, 1)',
-    'rgba(250, 243, 221, 1)',
-    'rgba(150, 220, 189, 1)',
-    'rgba(158, 170, 219, 1)',
-    'rgba(105, 108, 128, 1)'
+    '#B1B4D3',
+    '#E1DFD7',
+    '#C2D4DE',
+    '#A6C6DE',
+    '#87B6D8',
+    '#769BCF',
+    '#F8E5A5',
+    '#F8ADA4',
+    '#FFDDC3',
+    '#E4CBBC',
+    '#B7A590',
+    '#B2CCD4'
   ]
+  const allPitches = {
+    C: colors[0],
+    'C♯ / D♭': colors[1],
+    D: colors[2],
+    'D♯ / E♭': colors[3],
+    E: colors[4],
+    F: colors[5],
+    'F♯ / G♭': colors[6],
+    G: colors[7],
+    'G♯ / A♭': colors[8],
+    A: colors[9],
+    'A♯ / B♭': colors[10],
+    B: colors[11]
+  }
+
+  const cycleLoop = [0, 1, 2, 3, 4, 5]
+  const scale = 0.75
+  const sVisualImgWidth = 195
+  const sVisualImgHeight = 225
+  const scaledWidth = scale * sVisualImgWidth
+  const scaledHeight = scale * sVisualImgHeight
+  var sVisualImg = new Image()
+
+  sVisualImg.src = '/images/coin-art.png'
+
+  function drawFrame (frameX, frameY, canvasX, canvasY) {
+    let songVisual = songVisualRef.current.getContext('2d')
+    songVisual.globalCompositeOperation = 'color'
+    songVisual.drawImage(
+      sVisualImg,
+      frameX * sVisualImgWidth,
+      frameY * sVisualImgHeight,
+      sVisualImgWidth,
+      sVisualImgHeight,
+      canvasX,
+      canvasY,
+      scaledWidth,
+      scaledHeight
+    )
+  }
+
+  function checkWindowWidth () {
+    if (window.innerWidth < 768) {
+      // dropdown view depending on screen width
+      setWindowSmall(true)
+    } else {
+      setWindowSmall(false)
+    }
+  }
 
   function doFullScreen () {
     if (featuresChartContainer.current.requestFullscreen) {
@@ -73,62 +129,30 @@ export default function FeaturesChart ({
     }
   }
 
-  // for chart clicks or activating visuals (depending on visState)
-  function featureClick (clickEvent, optional = null) {
-    if (userInfo.subscription === 'free' && !optional) {
+  // handle click events on the feature chart
+  function featureClick (clickEvent, subscription) {
+    if (subscription === 'free') {
+      setShowDisabledToast(true)
       return
     }
     const time =
-      optional ??
       (clickEvent.nativeEvent.offsetX / featuresChartRef.current.width) *
-        analysisData.track.duration *
-        2
-    const kind =
-      optional ??
-      getFloorRowPosition(
-        clickEvent.nativeEvent.offsetY * 2,
-        fChartProps.rowHeight
-      )
-    const seekTime =
-      optional ??
-      binaryIndexOf.call(
-        fChartProps.arrayLikes[kind],
-        time,
-        e => e.start,
-        (element, index) => element
-      )
-    fetch(
-      `/api/v1/me/player/seek?position_ms=${Math.floor(
-        (seekTime < 0 ? 0 : seekTime) * 1000
-      )}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    ).catch(e => console.log(e))
-
-    if (fChartProps.pitchesObj['startTime'].length !== 0) {
-      const seekPitch = binaryIndexOf.call(
-        fChartProps.pitchesObj['startTime'],
-        time,
-        e => e,
-        (element, index) => index
-      )
-      setDominantPitch(fChartProps.pitchesObj?.['pitch'][seekPitch])
-      setPitchCounter(seekPitch)
-    }
-
-    if (fChartProps.beatsObj['startTime'].length !== 0) {
-      const seekBeat = binaryIndexOf.call(
-        fChartProps.beatsObj['startTime'],
-        time,
-        e => e,
-        (element, index) => index
-      )
-      setBeatCounter(seekBeat)
-      prevBeatCounter.current = seekBeat - 1
-    }
+      state.analysisData.track.duration *
+      2
+    const kind = getFloorRowPosition(
+      clickEvent.nativeEvent.offsetY * 2,
+      fChartProps.rowHeight
+    )
+    const seekTime = binaryIndexOf.call(
+      fChartProps.arrayLikes[kind],
+      time,
+      e => e.start,
+      (element, index) => element
+    )
+    player.current
+      ?.seek(Math.floor((seekTime < 0 ? 0 : seekTime) * 1000))
+      .catch(e => console.log(e))
+    setCurrPosition(seekTime)
   }
 
   // draw feature chart
@@ -139,20 +163,19 @@ export default function FeaturesChart ({
     const sVisual = songVisualRef.current
 
     featuresChart
-      .getContext('2d')
+      .getContext('2d', {
+        willReadFrequently: true
+      })
       .clearRect(0, 0, featuresChart.width, featuresChart.height)
-    sVisual.getContext('2d').clearRect(0, 0, sVisual.width, sVisual.height)
     featuresChart.width = featuresChart.offsetWidth * 2
     featuresChart.height = featuresChart.offsetHeight * 2
     const width = featuresChart.width
     const height = featuresChart.height
 
     sVisual.width = featuresChart.offsetWidth
-    sVisual.height = 200
+    sVisual.height = featuresChart.offsetHeight / 2
 
-    const fChartCtx = featuresChart.getContext('2d', {
-      willReadFrequently: true
-    })
+    const fChartCtx = featuresChart.getContext('2d')
     setSVisualProps({
       ...sVisualProps,
       width: sVisual.width,
@@ -161,11 +184,7 @@ export default function FeaturesChart ({
       centerY: sVisual.height / 2,
       radius: featuresChart.height / 8
     })
-    const sVisualCtx = sVisual.getContext('2d', { willReadFrequently: true })
-    featuresChart
-      .getContext('2d')
-      .clearRect(0, 0, featuresChart.width, featuresChart.height)
-    sVisual.getContext('2d').clearRect(0, 0, sVisual.width, sVisual.height)
+    fChartCtx.clearRect(0, 0, featuresChart.width, featuresChart.height)
     const arrayLikesEntries = Object.entries(data)
       .filter(entry => entry[1] instanceof Array && !entry.includes('tatums'))
       .sort((a, b) => a[1].length - b[1].length)
@@ -208,74 +227,85 @@ export default function FeaturesChart ({
         }
         if (
           arrayLikesKeys[arrayLikeIndex] == 'segments' &&
-          section.confidence >= 0.75
+          section.confidence >= 0.7
         ) {
           if (section.pitches.indexOf(1) === pitchSegment) {
             return
           }
           pitchSegment = section.pitches.indexOf(1) // pitch val of 1 indicates pure tone
-          fChartCtx.fillStyle = colors[sectionIndex % colors.length]
           pitchesObj['pitchSectionI'].push(sectionIndex)
+
+          switch (pitchSegment) {
+            case 0:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('C')
+              fChartCtx.fillStyle = colors[0]
+              break
+            case 1:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('C♯ / D♭')
+              fChartCtx.fillStyle = colors[1]
+              break
+            case 2:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('D')
+              fChartCtx.fillStyle = colors[2]
+              break
+            case 3:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('D♯ / E♭')
+              fChartCtx.fillStyle = colors[3]
+              break
+            case 4:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('E')
+              fChartCtx.fillStyle = colors[4]
+              break
+            case 5:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('F')
+              fChartCtx.fillStyle = colors[5]
+              break
+            case 6:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('F♯ / G♭')
+              fChartCtx.fillStyle = colors[6]
+              break
+            case 7:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('G')
+              fChartCtx.fillStyle = colors[7]
+              break
+            case 8:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('G♯ / A♭')
+              fChartCtx.fillStyle = colors[8]
+              break
+            case 9:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('A')
+              fChartCtx.fillStyle = colors[9]
+              break
+            case 10:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('A♯ / B♭')
+              fChartCtx.fillStyle = colors[10]
+              break
+            case 11:
+              pitchesObj['startTime'].push(section.start)
+              pitchesObj['pitch'].push('B')
+              fChartCtx.fillStyle = colors[11]
+              break
+            default:
+              pitchesObj['startTime'].push(null)
+              pitchesObj['pitch'].push(null)
+          }
           fChartCtx.fillRect(
             (section.start / data.track.duration) * width,
             getRowPosition(arrayLikeIndex) * rowHeight,
             data.track.duration * width,
             arrayLikeHeight
           )
-
-          switch (pitchSegment) {
-            case 0:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('C')
-              break
-            case 1:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('C♯/D♭')
-              break
-            case 2:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('D')
-              break
-            case 3:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('D♯/E♭')
-              break
-            case 4:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('E')
-              break
-            case 5:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('F')
-              break
-            case 6:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('F♯/G♭')
-              break
-            case 7:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('G')
-              break
-            case 8:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('G♯/A♭')
-              break
-            case 9:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('A')
-              break
-            case 10:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('A♯/B♭')
-              break
-            case 11:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('B')
-              break
-            default:
-              pitchesObj['startTime'].push(null)
-              pitchesObj['pitch'].push(null)
-          }
         }
       })
       if (arrayLikesKeys[arrayLikeIndex] != 'segments') {
@@ -301,64 +331,54 @@ export default function FeaturesChart ({
     })
 
     let fChartImgData = null
-    let sVisualImgLoaded = false
     function provideAnimationFrame () {
-      if (userInfo.subscription === 'free') {
+      if (state.profileInfo.subscription === 'free') {
         fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${session.user.accessToken}`
           }
         })
-          .then(e => e.json())
-          .then(data => {
+          .then(async e => {
+            const data = await e.json()
             if (!animReq.current) return // exit animation
             if (!data?.item) {
               let isNull = true
               while (isNull) {
-                isNull = checkNull()
+                try {
+                  isNull = await checkNull()
+                } catch (error) {
+                  console.error('Error in checkNull:', error)
+                  break
+                }
               }
               /* do special case for a chosen song 
               from Spotify client (free users) */
               doneResizing(true)
               return
             } else if (data?.item) {
-              if (spotifyObj.currentTrack !== data.item.id) {
-                animReq.current = false
-                doneResizing()
-                return
-              }
               if (!data.is_playing) {
-                funcs.pauseVidAuto()
+                pauseTrack(player, setState)
               } else if (data.is_playing) {
-                funcs.resumeVidAuto()
+                resumeTrack(player, setState)
               }
-              if (resizeEvent.current) {
+              if (
+                resizeEvent.current ||
+                state.spotifyObj.currentTrack !== data.item.id
+              ) {
                 animReq.current = false
                 resizeEvent.current = false
-                return
+                syncPlayer(state, setState, session)
               } else {
-                setTimer(
-                  (((data.progress_ms % 60000) / 1000).toFixed(0) == 60
-                    ? Math.floor(data.progress_ms / 60000) + 1 + ':00'
-                    : Math.floor(data.progress_ms / 60000) +
-                      ':' +
-                      (((data.progress_ms % 60000) / 1000).toFixed(0) < 10
-                        ? '0'
-                        : '') +
-                      ((data.progress_ms % 60000) / 1000).toFixed(0)) +
-                    ' / ' +
-                    ~~(((data.item.duration_ms / 1000) % 3600) / 60) +
-                    ':' +
-                    (~~(data.item.duration_ms / 1000) % 60 < 10 ? '0' : '') +
-                    (~~(data.item.duration_ms / 1000) % 60)
-                )
-
+                setTimer({
+                  ...timer,
+                  progress: data.progress_ms,
+                  duration: data.item.duration_ms
+                })
                 const currPosition = data.progress_ms / 1000
                 setCurrPosition(currPosition)
                 const markPosition =
                   (data.progress_ms / 1000 / (data.item.duration_ms / 1000)) *
                   width
-
                 fChartCtx.clearRect(
                   0,
                   0,
@@ -366,7 +386,6 @@ export default function FeaturesChart ({
                   featuresChart.height
                 )
                 fChartCtx.putImageData(fChartImgData, 0, 0)
-                if (sVisualImgLoaded) sVisualCtx.drawImage(sVisualImg, 0, 0)
                 fChartCtx.fillStyle = '#000'
                 fChartCtx.fillRect(markPosition, 0, 5, markerHeight)
                 animReq.current = requestAnimationFrame(provideAnimationFrame)
@@ -382,21 +401,11 @@ export default function FeaturesChart ({
             .getCurrentState()
             .then(state => {
               if (!animReq.current) return // exit animation
-              setTimer(
-                (((state.position % 60000) / 1000).toFixed(0) == 60
-                  ? Math.floor(state.position / 60000) + 1 + ':00'
-                  : Math.floor(state.position / 60000) +
-                    ':' +
-                    (((state.position % 60000) / 1000).toFixed(0) < 10
-                      ? '0'
-                      : '') +
-                    ((state.position % 60000) / 1000).toFixed(0)) +
-                  ' / ' +
-                  ~~(((state.duration / 1000) % 3600) / 60) +
-                  ':' +
-                  (~~(state.duration / 1000) % 60 < 10 ? '0' : '') +
-                  (~~(state.duration / 1000) % 60)
-              )
+              setTimer({
+                ...timer,
+                progress: state.position,
+                duration: state.duration
+              })
               const currPosition = state.position / 1000
               setCurrPosition(currPosition)
               const markPosition =
@@ -408,7 +417,6 @@ export default function FeaturesChart ({
                 featuresChart.height
               )
               fChartCtx.putImageData(fChartImgData, 0, 0)
-              if (sVisualImgLoaded) sVisualCtx.drawImage(sVisualImg, 0, 0)
               fChartCtx.fillStyle = '#000'
               fChartCtx.fillRect(markPosition, 0, 5, markerHeight)
               animReq.current = requestAnimationFrame(provideAnimationFrame)
@@ -419,13 +427,9 @@ export default function FeaturesChart ({
       }
     }
     var fChartImg = new Image()
-    var sVisualImg = new Image()
 
     fChartImg.src = featuresChart.toDataURL('png')
-    sVisualImg.src = sVisual.toDataURL('png')
-    sVisualImg.onload = function () {
-      sVisualImgLoaded = true
-    }
+
     fChartImg.onload = function () {
       fChartImgData = fChartCtx.getImageData(
         0,
@@ -488,26 +492,11 @@ export default function FeaturesChart ({
       : getFloorRowPosition(searchPosition, rowHeight, i + 1, max)
 
   // drawing on canvas
-  function getVisType (sVisualCtx, currXPos, properties, songPlaying = true) {
-    if (localStorage.getItem('beat_visualizer_type') === 'mix') {
-      if (songPlaying) var pick = Math.floor(Math.random() * 3)
-      if (pick === 0) {
-        sVisualCtx.arc(
-          currXPos,
-          properties.centerY,
-          properties.radius,
-          0,
-          2 * Math.PI
-        )
-      } else if (pick === 1) {
-        sVisualCtx.moveTo(currXPos, 0)
-        sVisualCtx.lineTo(currXPos + properties.width / 9, properties.height)
-        sVisualCtx.lineTo(currXPos - properties.width / 9, properties.height)
-        sVisualCtx.closePath()
-      } else {
-        sVisualCtx.rect(currXPos, 0, properties.width / 6, properties.height)
-      }
-    } else if (localStorage.getItem('beat_visualizer_type') === 'circle') {
+  function getVisType (sVisualCtx, currXPos, properties) {
+    sVisualCtx.beginPath()
+    if (state.visState.type === 'panorama') {
+      sVisualCtx.rect(0, 1, properties.width, properties.height)
+    } else if (state.visState.type === 'orb') {
       sVisualCtx.arc(
         currXPos,
         properties.centerY,
@@ -515,131 +504,59 @@ export default function FeaturesChart ({
         0,
         2 * Math.PI
       )
-    } else if (localStorage.getItem('beat_visualizer_type') === 'triangle') {
+    } else if (state.visState.type === 'pyramid') {
       sVisualCtx.moveTo(currXPos, 0)
-      sVisualCtx.lineTo(currXPos + properties.width / 9, properties.height)
-      sVisualCtx.lineTo(currXPos - properties.width / 9, properties.height)
-      sVisualCtx.closePath()
-    } else if (localStorage.getItem('beat_visualizer_type') === 'square') {
-      sVisualCtx.rect(currXPos, 0, properties.width / 6, properties.height)
+      sVisualCtx.lineTo(currXPos + properties.width / 7, properties.height)
+      sVisualCtx.lineTo(currXPos - properties.width / 7, properties.height)
+    } else if (state.visState.type === 'block') {
+      sVisualCtx.rect(currXPos / 2, 1, properties.width / 2, properties.height)
     }
+    sVisualCtx.closePath()
+    sVisualCtx.stroke()
+    sVisualCtx.fill()
   }
-
-  // show similar songs using current song's properties
-  function showSimilar () {
-    fetch(
-      '/api/v1/recommendations?seed_artists=' +
-        spotifyObj.currentArtist +
-        '&seed_tracks=' +
-        spotifyObj.currentTrack +
-        '&target_energy=' +
-        spotifyObj.currentEnergy +
-        '&target_valence=' +
-        spotifyObj.currentValence +
-        '&target_tempo=' +
-        spotifyObj.currentTempo +
-        '&target_danceability=' +
-        spotifyObj.currentDanceability +
-        '&target_time_signature=' +
-        spotifyObj.currentTimeSig +
-        '&market=' +
-        userInfo.country +
-        '&limit=4',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    )
-      .then(e => e.json())
-      .then(data => {
-        fChartState.setFChartData(prev => ({
-          ...prev,
-          recommendations: data
-        }))
-      })
-  }
-
-  function popPlist () {
-    fetch('/api/v1/me/playlists?limit=50', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(e => e.json())
-      .then(data => {
-        fChartState.setFChartData(prev => ({
-          ...prev,
-          playlists: data
-        }))
-      })
-      .catch(error => {
-        console.log(error)
-      })
-  } // show playlists in dropdown
-
-  function addTrack2Plist (track, playlist) {
-    fetch('/api/v1/me/addToPlist?playlist=' + playlist + '&track=' + track, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(() => {
-        setShowAddToPlistToast(true)
-      })
-      .catch(e => console.error(e))
-  } // add to playlist functionality
-
-  function saveCurrTrack () {
-    fetch('/api/v1/me/saveTrack?id=' + spotifyObj.currentTrack, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(() => {
-        setShowSaveSongToast(true)
-      })
-      .catch(e => console.error(e))
-  } // save track functionality
 
   // resizing canvas
   function doneResizing (specialCase = false) {
-    if (featuresData || specialCase) {
+    if (state.featuresData || specialCase) {
       fetch('https://api.spotify.com/v1/me/player/currently-playing', {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${session.user.accessToken}`
         }
       })
-        .then(e => e.json())
-        .then(data => {
+        .then(async e => {
+          const data = await e.json()
           if (!data?.item) {
             let isNull = true
             while (isNull) {
-              isNull = checkNull()
+              try {
+                isNull = await checkNull()
+              } catch (error) {
+                console.error('Error in checkNull:', error)
+                break
+              }
             }
             /* do special case for a chosen song 
             from Spotify client (free users) */
             doneResizing(true)
             return
           }
-          if (spotifyObj.currentTrack && !resizeEvent.current && !specialCase) {
+          if (
+            state.spotifyObj.currentTrack &&
+            !resizeEvent.current &&
+            !specialCase
+          ) {
             resizeEvent.current = true
           }
           if (
-            userInfo.subscription === 'free' &&
-            spotifyObj.currentTrack !== data.item.id
+            state.profileInfo.subscription === 'free' &&
+            state.spotifyObj.currentTrack !== data.item.id
           ) {
-            funcs.syncPlayer()
+            syncPlayer(state, setState, session)
           } else if (
-            spotifyObj.currentTrack &&
-            !data.is_playing &&
-            data.item.id === spotifyObj.currentTrack
-          ) {
-            resizingAnalysis(data.item.id)
-          } else if (
-            spotifyObj.currentTrack &&
-            data.is_playing &&
-            data.item.id === spotifyObj.currentTrack
+            state.spotifyObj.currentTrack &&
+            (!data.is_playing || data.is_playing) &&
+            data.item.id === state.spotifyObj.currentTrack
           ) {
             resizingAnalysis(data.item.id)
           }
@@ -650,24 +567,25 @@ export default function FeaturesChart ({
     }
   }
 
-  function checkNull () {
-    fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(e => e.json())
-      .then(data => {
-        if (data?.item) return true
-        else return false
-      })
-      .catch(error => {
-        console.log(error)
-      })
+  async function checkNull () {
+    try {
+      const res = await fetch(
+        'https://api.spotify.com/v1/me/player/currently-playing',
+        {
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`
+          }
+        }
+      )
+      const data = await res.json()
+      return !data?.item
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   function resizingAnalysis (id) {
-    if (spotifyObj.currentTrack) {
+    if (state.spotifyObj.currentTrack) {
       resetCanvas(id)
     }
   } // helper function when resizing canvas
@@ -676,7 +594,7 @@ export default function FeaturesChart ({
     let query = '/api/analysis?id=' + id
     const e = await fetch(query, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${session.user.accessToken}`
       }
     })
     const data = await e.json()
@@ -694,34 +612,21 @@ export default function FeaturesChart ({
   } // after a delay, a function executes once
 
   useEffect(() => {
-    if (analysisData && featuresData && artCover) {
-      drawAnalysis(analysisData)
+    if (state.analysisData && state.featuresData && state.artCover) {
+      drawAnalysis(state.analysisData)
     }
     function handleResize () {
-      if (window.innerWidth < 476) {
-        // dropdown view depending on device width
-        setWindowSmall(true)
-      } else {
-        setWindowSmall(false)
-      }
+      checkWindowWidth()
       doneResizing()
     }
-    const debouncedResize = debounce(handleResize, 600)
+    const debouncedResize = debounce(handleResize, 200)
     window.addEventListener('resize', debouncedResize)
     return () => {
       cancelAnimationFrame(animReq.current)
+      animReq.current = null
       window.removeEventListener('resize', debouncedResize)
     }
-  }, [analysisData, featuresData, artCover])
-
-  useEffect(() => {
-    if (
-      fChartProps.beatsObj?.['startTime'].length !== 0 &&
-      fChartState.visState
-    ) {
-      featureClick(null, 0) // show shape visuals
-    }
-  }, [fChartProps, fChartState.visState])
+  }, [state.analysisData])
 
   useEffect(() => {
     if (currPosition === 0) {
@@ -738,14 +643,15 @@ export default function FeaturesChart ({
         fChartProps.pitchesObj['startTime'],
         currPosition,
         e => e,
-        (element, index) => index
+        (__, index) => index
       )
       const seekBeat = binaryIndexOf.call(
         fChartProps.beatsObj['startTime'],
         currPosition,
         e => e,
-        (element, index) => index
+        (__, index) => index
       )
+      setDominantPitch(fChartProps.pitchesObj?.['pitch'][seekPitch])
       setPitchCounter(seekPitch)
       setBeatCounter(seekBeat)
     }
@@ -776,44 +682,73 @@ export default function FeaturesChart ({
       ) {
         setDominantPitch(fChartProps.pitchesObj?.['pitch'][pitchCounter])
       }
-
       if (
-        Math.fround(currPosition) >
-        Math.fround(fChartProps.beatsObj?.['startTime'][beatCounter])
+        Math.fround(currPosition) >=
+          Math.fround(fChartProps.beatsObj?.['startTime'][beatCounter]) ||
+        currPosition === 0
       ) {
-        const sVisual = songVisualRef.current
-        const sVisualCtx = sVisual.getContext('2d')
-        sVisualCtx.clearRect(0, 0, sVisual.width, sVisual.height)
+        if (state.visState.on) {
+          const sVisual = songVisualRef.current
+          const sVisualCtx = sVisual.getContext('2d', {
+            willReadFrequently: true
+          })
+          sVisualCtx.clearRect(0, 0, sVisual.width, sVisual.height)
+          sVisualCtx.fillStyle =
+            allPitches[fChartProps.pitchesObj?.['pitch'][pitchCounter]]
+          sVisualCtx.strokeStyle = '#000'
+          sVisualCtx.lineWidth = 2
 
-        sVisualCtx.beginPath()
-        sVisualCtx.fillStyle =
-          colors[
-            fChartProps.pitchesObj?.['pitchSectionI'][pitchCounter] %
-              colors.length
-          ]
-        sVisualCtx.strokeStyle = '000'
-        sVisualCtx.lineWidth = 0.5
-        if (prevBeatCounter.current === beatCounter) {
+          drawFrame(
+            cycleLoop[beatCounter % cycleLoop.length],
+            0,
+            ((currPosition / state.analysisData.track.duration) *
+              sVisualProps.centerX) /
+              1.1,
+            7.5
+          )
           getVisType(
             sVisualCtx,
             easeInOutSine(
               currPosition,
-              sVisualProps.centerX - sVisualProps.centerX / 2,
               sVisualProps.centerX,
+              0,
               fChartProps.beatsObj?.['beatDuration'][beatCounter]
             ),
-            sVisualProps,
-            !isPaused
+            sVisualProps
           )
-          sVisualCtx.fill()
-          sVisualCtx.stroke()
-        } else {
-          prevBeatCounter.current = beatCounter
+
+          if (state.visState.type !== 'block') {
+            getVisType(
+              sVisualCtx,
+              easeInOutSine(
+                currPosition,
+                sVisualProps.centerX / 2,
+                0,
+                fChartProps.beatsObj?.['beatDuration'][beatCounter]
+              ),
+              sVisualProps
+            )
+            getVisType(
+              sVisualCtx,
+              easeInOutSine(
+                currPosition,
+                sVisualProps.width - sVisualProps.centerX / 2,
+                0,
+                fChartProps.beatsObj?.['beatDuration'][beatCounter]
+              ),
+              sVisualProps
+            )
+          }
         }
-        setBeatCounter(beatCounter + 1)
+        if (prevBeatCounter.current !== beatCounter)
+          prevBeatCounter.current = beatCounter
       }
     }
-  }, [beatCounter])
+  }, [beatCounter, pitchCounter, sVisualProps, state.visState.type])
+
+  useEffect(() => {
+    checkWindowWidth()
+  }, [])
 
   return (
     <>
@@ -823,240 +758,114 @@ export default function FeaturesChart ({
         style={{
           backgroundColor:
             'rgba(' +
-            artCover.color?.rgbVibrant[0] +
+            state.artCover.color?.rgbVibrant[0] +
             ', ' +
-            artCover.color?.rgbVibrant[1] +
+            state.artCover.color?.rgbVibrant[1] +
             ', ' +
-            artCover.color?.rgbVibrant[2] +
-            ', 0.3)'
+            state.artCover.color?.rgbVibrant[2] +
+            ', 0.3)',
+          border:
+            '2px solid rgb(' +
+            state.artCover.color?.rgbMuted[0] +
+            ', ' +
+            state.artCover.color?.rgbMuted[1] +
+            ', ' +
+            state.artCover.color?.rgbMuted[2] +
+            ')'
         }}
       >
-        <div
-          id='cover_and_play'
-          style={{
-            border:
-              '5px solid rgb(' +
-              artCover.color?.rgbMuted[0] +
-              ', ' +
-              artCover.color?.rgbMuted[1] +
-              ', ' +
-              artCover.color?.rgbMuted[2] +
-              ')'
-          }}
-        >
-          <Link
-            id='linkalbum'
-            style={{ margin: 'auto' }}
-            href={artCover.link ?? 'https://www.spotify.com'}
-            target='_blank'
-            rel='noreferrer'
-            aria-label='Go to album on spotify'
-          >
-            <NextImage
-              className='img-fluid'
-              id='spotiflogo'
-              src={SpotifyLogo}
-              width={100}
-              alt='spotify logo'
-              priority
-            />
-            {artCover.image && (
-              <NextImage
-                id='artcover'
-                className='img-fluid'
-                src={artCover.image}
-                width={300}
-                height={300}
-                alt='cover'
-                priority
-              />
-            )}
-          </Link>
-          <div id='play'>
-            <div className='playpausebutton'>
-              <div
-                className={isPaused ? 'd-block' : 'd-none'}
-                id='playedButton'
-              >
-                <button
-                  disabled={userInfo.subscription === 'free'}
-                  className='paused'
-                  id='resume-btn'
-                  onClick={funcs.resumeVid}
-                ></button>
-              </div>
-              <div
-                className={isPaused ? 'd-none' : 'd-block'}
-                id='pausedButton'
-              >
-                <button
-                  disabled={userInfo.subscription === 'free'}
-                  className='played'
-                  id='pause-btn'
-                  onClick={funcs.pauseVid}
-                ></button>
-              </div>
-            </div>
-            <div id='bpmdisplay'>
-              <div className='displaybpm'>
-                <p id='BPM'>{Math.round(featuresData?.tempo) + ' BPM'}</p>
-              </div>
-
-              <div
-                aria-live='polite'
-                aria-atomic='true'
-                className='position-relative'
-                id='toastDiv'
-              >
-                <ToastContainer className='p-3' position='top-end'>
-                  <Toast
-                    onClose={() => setShowSaveSongToast(false)}
-                    show={showSaveSongToast}
-                    className='align-items-center'
-                    id='saveSongToast'
-                    delay='3000'
-                    autohide
-                  >
-                    <Toast.Body>Song saved</Toast.Body>
-                  </Toast>
-
-                  <Toast
-                    onClose={() => setShowAddToPlistToast(false)}
-                    show={showAddToPlistToast}
-                    className='align-items-center'
-                    id='addToPlistToast'
-                    delay='3000'
-                    autohide
-                  >
-                    <Toast.Body>Song added to playlist</Toast.Body>
-                  </Toast>
-                </ToastContainer>
-              </div>
+        <Container fluid>
+          <Row>
+            <Col className='d-flex flex-column px-0'>
               <button className='btn' id='fullScreenBtn' onClick={doFullScreen}>
-                <i className='bi bi-fullscreen'></i>
+                <i className='bi bi-fullscreen' />
               </button>
-            </div>
-            <div id='displaysongstuff'>
-              <p id='timer'>{timer}</p>
-            </div>
-            <div className='bpmKey'>
-              <span id='bpmAndKey'>
-                Key:{' '}
-                <span id='keyOfT'>
-                  {featuresData?.key}
-                  {featuresData?.mode == 1 ? ' Major' : ' Minor'}
-                </span>
-                <span style={{ fontSize: 'x-large' }}> | </span>
-                Pitch:
-                <span id='domPitch'>
-                  {dominantPitch ? ' ' + dominantPitch : ''}
-                </span>
-                <br />
-                {featuresData?.time_signature + ' beats per bar\n'}
-              </span>
-              <span id='instrumental'>
-                <br />
-                <span style={{ textDecoration: 'overline' }}>
-                  Mood:{' '}
-                  {featuresData?.valence >= 0.5
-                    ? 'positivity and/or happiness'
-                    : 'tension and/or melancholy'}
-                </span>
-                <br />
-                {featuresData?.instrumentalness >= 0.7 ? 'Instrumental' : ''}
-              </span>
-            </div>
-            <div className='d-flex float-start' id='hideSongs'>
-              <ButtonGroup className='trackOptions' vertical size='sm'>
-                <button
-                  className='btn btn-sm btn-aubergine'
-                  id='showSimBtn'
-                  onClick={showSimilar}
-                >
-                  Show similar
-                </button>
-                <ButtonGroup id='partialSimBtns' style={{ height: '50%' }}>
-                  <button
-                    className='btn btn-sm btn-aubergine'
-                    id='save-track-btn'
-                    onClick={saveCurrTrack}
-                  >
-                    Save song
-                  </button>
-                  <Dropdown
-                    as={ButtonGroup}
-                    drop={!windowSmall ? 'end' : 'up-centered'}
-                    onClick={popPlist}
-                  >
-                    <Dropdown.Toggle
-                      variant='aubergine'
-                      size='sm'
-                      id='add2PlistBtn'
-                    >
-                      Add to playlist
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu className='text-center' id='plistOptions'>
-                      {fChartState.fChartData?.playlists?.items?.length ===
-                      0 ? (
-                        <Dropdown.Item disabled>Nothing found</Dropdown.Item>
-                      ) : (
-                        fChartState.fChartData?.playlists?.items?.map(
-                          (result, index) =>
-                            result.owner.id === userInfo.username ||
-                            result.collaborative === true ? (
-                              <Dropdown.Item
-                                key={result.id}
-                                onClick={() => {
-                                  addTrack2Plist(
-                                    spotifyObj.currentTrack,
-                                    result.id
-                                  )
-                                }}
-                              >
-                                {result.name}
-                              </Dropdown.Item>
-                            ) : (
-                              <Fragment key={index}></Fragment>
-                            )
-                        )
-                      )}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </ButtonGroup>
-              </ButtonGroup>
-            </div>
-            <div id='displaysong'>
-              <p id='albumart'>
-                <span id='trackStatus'>
-                  {!isPaused ? 'Currently Playing' : 'Paused'}
-                </span>
-                :{' "'}
-                {spotifyObj.currentTrackInfo?.name +
-                  '" by ' +
-                  spotifyObj.currentTrackInfo?.artists
-                    .map(eachArtist => eachArtist.name)
-                    .join(', ') +
-                  ' (from the ' +
-                  spotifyObj.currentTrackInfo?.album.album_type +
-                  ' ' +
-                  spotifyObj.currentTrackInfo?.album.name +
-                  ')'}
-              </p>
-            </div>
-          </div>
-        </div>
+            </Col>
+          </Row>
+        </Container>
         <canvas
           id='features-chart'
           ref={featuresChartRef}
           onClick={event => {
-            featureClick(event, null)
+            featureClick(event, state.profileInfo.subscription)
           }}
         ></canvas>
         <canvas
-          className={fChartState.visState ? 'd-block' : 'd-none'}
+          className={state.visState.on ? 'd-block' : 'd-none'}
           id='song-visual'
           ref={songVisualRef}
         ></canvas>
+        <ToastContainer
+          className='p-3 position-fixed'
+          position='bottom-end'
+          id='toastDiv'
+        >
+          <Toast
+            onClose={() => setShowSongToast({ ...showSongToast, added: false })}
+            show={showSongToast.added}
+            className='text-center trackOptionsToast'
+            delay='2000'
+            autohide
+          >
+            <Toast.Body>Added to Liked Songs</Toast.Body>
+          </Toast>
+          <Toast
+            onClose={() =>
+              setShowSongToast({ ...showSongToast, removed: false })
+            }
+            show={showSongToast.removed}
+            className='text-center trackOptionsToast'
+            id='removeSongToast'
+            delay='2000'
+            autohide
+          >
+            <Toast.Body>Removed from Liked Songs</Toast.Body>
+          </Toast>
+          <Toast
+            onClose={() =>
+              setShowPlistToast({ ...showPlistToast, added: false })
+            }
+            show={showPlistToast.added}
+            className='text-center trackOptionsToast'
+            delay='2000'
+            autohide
+          >
+            <Toast.Body>Song added to playlist</Toast.Body>
+          </Toast>
+          <Toast
+            onClose={() =>
+              setShowPlistToast({ ...showPlistToast, removed: false })
+            }
+            show={showPlistToast.removed}
+            className='text-center trackOptionsToast'
+            delay='2000'
+            autohide
+          >
+            <Toast.Body>Song removed from playlist</Toast.Body>
+          </Toast>
+          <Toast
+            onClose={() => setShowDisabledToast(false)}
+            show={showDisabledToast}
+            className='text-center trackOptionsToast'
+            delay='2000'
+            autohide
+          >
+            <Toast.Body>Control disabled (premium feature)</Toast.Body>
+          </Toast>
+        </ToastContainer>
+        <BottomPlayer
+          setShowDisabledToast={setShowDisabledToast}
+          showPlistToast={showPlistToast}
+          setShowPlistToast={setShowPlistToast}
+          showSongToast={showSongToast}
+          setShowSongToast={setShowSongToast}
+          windowSmall={windowSmall}
+          timer={timer}
+          dominantPitch={dominantPitch}
+          currPitch={
+            allPitches[fChartProps.pitchesObj?.['pitch'][pitchCounter]]
+          }
+        />
       </div>
     </>
   )

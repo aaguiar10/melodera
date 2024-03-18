@@ -5,7 +5,7 @@ export default async function handler (req, res) {
   return spotifyApi
     .getFollowedArtists({
       type: 'artist',
-      limit: 4,
+      limit: 50,
       after: req.query.after
     })
     .then(function (data) {

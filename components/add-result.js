@@ -1,156 +1,98 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
+import { AnalysisContext } from '../utils/context'
+import { useSession } from 'next-auth/react'
+import { playTrack, getAnalysis, getFeatures } from '../utils/funcs'
 
 // component for additional results
-export default function AddResult ({
-  resultId,
-  categ,
-  userCountry,
-  toggledAdd,
-  token,
-  init
-}) {
+export default function AddResult ({ resultId, category, toggledAdd }) {
+  const { data: session } = useSession()
+  const [state, setState, player, deviceId] = useContext(AnalysisContext)
   const [data, setData] = useState(null)
 
   // set data depending on the id toggled and its category
   useEffect(() => {
-    if (toggledAdd[resultId]) {
-      if (categ == 'artist') {
-        fetch(
-          '/api/v1/artistTopTracks/?id=' + resultId + '&market=' + userCountry,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-          .then(e => e.json())
-          .then(data => {
-            if (data.tracks.length === 0) {
-              setData({})
-            } else {
-              setData(data)
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error)
-            setData(null)
-          })
-      } else if (categ == 'album') {
-        fetch(
-          '/api/v1/albumTracks/?id=' + resultId + '&market=' + userCountry,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-          .then(e => e.json())
-          .then(data => {
-            if (data.items.length === 0) {
-              setData({})
-            } else {
-              setData(data)
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error)
-            setData(null)
-          })
-      } else if (categ == 'plist') {
-        fetch(
-          '/api/v1/playlistTracks/?id=' + resultId + '&market=' + userCountry,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-          .then(e => e.json())
-          .then(data => {
-            if (data.tracks.items.length === 0) {
-              setData({})
-            } else {
-              setData(data)
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error)
-            setData(null)
-          })
-      }
+    const fetchMap = {
+      artist: { url: '/api/v1/artistTopTracks/', dataPath: 'tracks' },
+      album: { url: '/api/v1/albumTracks/', dataPath: 'items' },
+      playlist: { url: '/api/v1/playlistTracks/', dataPath: 'tracks.items' }
     }
-  }, [toggledAdd, resultId, categ, userCountry, token])
+
+    if (toggledAdd[resultId]) {
+      const { url, dataPath } = fetchMap[category]
+      fetch(`${url}?id=${resultId}&market=${state.profileInfo.userCountry}`, {
+        headers: { Authorization: `Bearer ${session.user.accessToken}` }
+      })
+        .then(e => e.json())
+        .then(data => {
+          const items = dataPath.split('.').reduce((o, i) => o[i], data)
+          setData(items.length === 0 ? {} : data)
+        })
+        .catch(error => {
+          console.error('Error:', error)
+          setData(null)
+        })
+    }
+  }, [
+    toggledAdd,
+    resultId,
+    category,
+    state.profileInfo.userCountry,
+    session.user.accessToken
+  ])
 
   // decide what the component returns depending on data/category
-  if (data === null || toggledAdd[resultId] === false) {
+  if (!data || !toggledAdd[resultId]) {
     return <ol className='addResultText' id={resultId}></ol>
   } else if (Object.keys(data).length === 0) {
     return (
       <ol className='addResultText' id={resultId}>
-        {categ == 'artist' ? (
+        {category === 'artist' && (
           <p className='text-decoration-underline'>Popular</p>
-        ) : (
-          <></>
         )}
         <p>&lt;Nothing found&gt;</p>
       </ol>
     )
   } else {
+    const renderListItem = (item, index) => (
+      <li
+        onClick={() => {
+          playTrack(item.id, player, deviceId, session, state)
+          getFeatures(item.id, session, setState)
+          getAnalysis(item.id, session, setState)
+        }}
+        key={item.id}
+        className='addResultItem'
+      >
+        {++index}. {item.name}
+      </li>
+    )
     return (
       <ol className='addResultText' id={resultId}>
-        {categ == 'artist' ? (
-          <p className='text-decoration-underline'>Popular</p>
-        ) : (
-          <></>
+        {category === 'artist' && (
+          <>
+            <p className='text-decoration-underline'>Popular</p>
+            {data.tracks.map(renderListItem)}
+          </>
         )}
-        {categ == 'artist' ? (
-          data.tracks.map((track, index) => (
-            <li
-              onClick={() => {
-                init.playVid(track.id)
-                init.getAnalysis(track.id)
-                init.getFeatures(track.id)
-              }}
-              key={track.id}
-            >
-              {++index}. {track.name}
-            </li>
-          ))
-        ) : categ == 'album' ? (
-          data.items.map((track, index) => (
-            <li
-              onClick={() => {
-                init.playVid(track.id)
-                init.getAnalysis(track.id)
-                init.getFeatures(track.id)
-              }}
-              key={track.id}
-            >
-              {++index}. {track.name}
-            </li>
-          ))
-        ) : categ == 'plist' ? (
+        {category === 'album' && data.items.map(renderListItem)}
+        {category === 'playlist' &&
           data.tracks.items
             .filter(result => result.track !== null)
             .map((result, index) => (
               <li
                 onClick={() => {
-                  init.playVid(result.track.id)
-                  init.getAnalysis(result.track.id)
-                  init.getFeatures(result.track.id)
+                  playTrack(result.track.id, player, deviceId, session, state)
+                  getFeatures(result.track.id, session, setState)
+                  getAnalysis(result.track.id, session, setState)
                 }}
                 key={result.track.id}
+                className='addResultItem'
               >
                 {++index}.{' '}
-                {result.track.artists
-                  .map(eachArtist => eachArtist.name)
-                  .join(', ')}{' '}
-                — {result.track.name}
+                {result.track.artists.map(artist => artist.name).join(', ')} —{' '}
+                {result.track.name}
               </li>
-            ))
-        ) : (
-          <></>
-        )}
+            ))}
       </ol>
     )
   }

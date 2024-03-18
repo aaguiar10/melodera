@@ -1,186 +1,204 @@
-import Image from 'next/image'
 import Container from 'react-bootstrap/Container'
 import Navbar from 'react-bootstrap/Navbar'
 import Nav from 'react-bootstrap/Nav'
 import NavDropdown from 'react-bootstrap/NavDropdown'
+import Form from 'react-bootstrap/Form'
+import InputGroup from 'react-bootstrap/InputGroup'
+import Button from 'react-bootstrap/Button'
 import LogoPic from '../public/images/melodera-logo.png'
 import DefaultPic from '../public/images/default_pic.png'
-import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
+import { useState, useRef, useEffect, useContext } from 'react'
 import { signOut } from 'next-auth/react'
+import { AnalysisContext } from '../utils/context'
+import { resumeTrack, pauseTrack } from '../utils/funcs'
 
-export default function NavBar ({
-  states,
-  profPic,
-  subscription,
-  player,
-  funcs
-}) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [inputValue, setInputValue] = useState('')
+// component for navigation bar
+export default function NavBar () {
+  const [state, setState, player] = useContext(AnalysisContext)
+  const [navState, setNavState] = useState({
+    isExpanded: false,
+    inputValue: ''
+  })
   const inputSrchRef = useRef(null)
-
-  function clearOut () {
-    player.current?.disconnect()
-    localStorage.clear()
-  }
-
+  
   function toHome () {
-    states.setActive('home')
-    states.setRenderType(prev => ({
-      ...prev,
-      home: true,
-      search: false,
-      library: false,
-      topTracks: false,
-      topArtists: false
+    window.scroll({ top: 0, behavior: 'auto' })
+    setState(prevState => ({
+      ...prevState,
+      active: 'home',
+      renderType: {
+        home: true,
+        search: false,
+        library: false,
+        topTracks: false,
+        topArtists: false
+      }
     }))
   }
 
   function getMyLibrary () {
-    states.setActive('librBtn')
-    states.setRenderType(prev => ({
-      ...prev,
-      home: false,
-      search: false,
-      library: true,
-      topTracks: false,
-      topArtists: false
+    setState(prevState => ({
+      ...prevState,
+      active: 'librBtn',
+      renderType: {
+        home: false,
+        search: false,
+        library: true,
+        topTracks: false,
+        topArtists: false
+      }
     }))
   }
 
   function getTopTracks (timeframe) {
-    states.setTimeframe(timeframe)
-    states.setRenderType(prev => ({
-      ...prev,
-      home: false,
-      search: false,
-      library: false,
-      topTracks: true,
-      topArtists: false
+    setState(prevState => ({
+      ...prevState,
+      timeframe: timeframe,
+      renderType: {
+        home: false,
+        search: false,
+        library: false,
+        topTracks: true,
+        topArtists: false
+      }
     }))
   }
 
   function getTopArtists (timeframe) {
-    states.setTimeframe(timeframe)
-    states.setRenderType(prev => ({
-      ...prev,
-      home: false,
-      search: false,
-      library: false,
-      topTracks: false,
-      topArtists: true
+    setState(prevState => ({
+      ...prevState,
+      timeframe: timeframe,
+      renderType: {
+        home: false,
+        search: false,
+        library: false,
+        topTracks: false,
+        topArtists: true
+      }
     }))
   }
 
   function handleSubmit (e) {
     e.preventDefault()
-    states.setActive('search')
-    states.setTimeframe('')
-    states.setSearchValue(inputValue.trim())
-    states.setRenderType(prev => ({
-      ...prev,
-      home: false,
-      search: true,
-      library: false,
-      topTracks: false,
-      topArtists: false
+    setState(prevState => ({
+      ...prevState,
+      active: 'search',
+      timeframe: '',
+      searchValue: navState.inputValue.trim(),
+      renderType: {
+        home: false,
+        search: true,
+        library: false,
+        topTracks: false,
+        topArtists: false
+      }
     }))
   }
 
   useEffect(() => {
-    if (player.current && subscription !== 'free') {
+    if (state.profileInfo.subscription !== 'free') {
       // add functionality to use spacebar for play/pause
-      window.onkeydown = function (event) {
+      const handleKeyDown = function (event) {
         if (document.activeElement !== inputSrchRef.current) {
-          if (event.keyCode === 32 && states.isPaused) {
-            funcs.resumeVid()
-          } else if (event.keyCode === 32 && !states.isPaused) {
-            funcs.pauseVid()
+          if (event.keyCode === 32 && state.isPaused) {
+            resumeTrack(player, setState)
+          } else if (event.keyCode === 32 && !state.isPaused) {
+            pauseTrack(player, setState)
           }
         }
       }
+
+      window.addEventListener('keydown', handleKeyDown)
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown)
+      }
     }
-  }, [states.isPaused, subscription])
+  }, [state.isPaused, state.profileInfo.subscription])
 
   return (
     <>
       <Navbar
-        className='rounded'
         sticky='top'
         expand='sm'
         id='topNav'
-        onToggle={() => setIsExpanded(!isExpanded)}
+        bg='light'
+        data-bs-theme='light'
+        onToggle={() =>
+          setNavState(prevState => ({
+            ...prevState,
+            isExpanded: !prevState.isExpanded
+          }))
+        }
       >
-        <Container fluid id='navContainer'>
+        <Container fluid className='gap-2' id='navContainer'>
           <div id='homeAndTog'>
-            <Navbar.Brand
-              className={states.active === 'home' ? 'active' : ''}
+            <Nav.Item
+              className={state.active === 'home' ? 'active' : ''}
               id='homeBtn'
               onClick={toHome}
             >
-              <Image
-                className='logo-nav'
-                src={LogoPic}
-                alt='logo'
-                width={40}
-                height={45}
-              />
-            </Navbar.Brand>
+              <Image className='logo-nav' src={LogoPic} alt='logo' width={50} />
+            </Nav.Item>
             <Navbar.Toggle id='nav-tog' aria-controls='navbarCollapse1'>
-              {isExpanded ? (
-                <i className='bi bi-toggle-on'></i>
-              ) : (
-                <i className='bi bi-toggle-off'></i>
-              )}
+              <i className='bi bi-three-dots-vertical'></i>
             </Navbar.Toggle>
-          </div>
-          <div className='input-group' id='srchAndForm'>
-            <form
-              className='d-flex'
-              id='searchTrack'
+            <InputGroup
+              className='h-50'
+              id='srchAndForm'
+              as={Form}
               onSubmit={e => handleSubmit(e)}
+              required
             >
-              <div className='input-group'>
-                <input
-                  type='text'
-                  className='form-control'
-                  id='inputSrch'
-                  placeholder='Search songs, artists... '
-                  aria-label='SearchTerm'
-                  aria-describedby='searchBtn'
-                  value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
-                  ref={inputSrchRef}
-                  required
-                />
-                <button
-                  className='btn btn-secondary'
-                  id='searchBtn'
-                  type='submit'
-                  aria-label='search button'
-                >
-                  <i className='bi bi-search'></i>
-                </button>
-              </div>
-            </form>
+              <Form.Control
+                type='text'
+                id='inputSrch'
+                placeholder='Search songs, artists...'
+                aria-label='Search songs, artists...'
+                aria-describedby='searchBtn'
+                value={navState.inputValue}
+                onChange={e =>
+                  setNavState(prevState => ({
+                    ...prevState,
+                    inputValue: e.target.value
+                  }))
+                }
+                ref={inputSrchRef}
+                required
+              />
+              <Button
+                variant='secondary'
+                id='searchBtn'
+                type='submit'
+                aria-label='search button'
+              >
+                <i className='bi bi-search'></i>
+              </Button>
+            </InputGroup>
           </div>
-
           <Navbar.Collapse id='navbarCollapse1'>
             <Nav id='navItems'>
               <Nav.Item
                 as={Nav.Link}
                 className='text-nowrap'
-                active={states.active === 'librBtn'}
+                active={state.active === 'librBtn'}
                 onClick={getMyLibrary}
               >
                 Library
               </Nav.Item>
               <NavDropdown
+                className='text-center'
                 title='Top Listens'
-                active={states.active === 'topOptionsDropdown'}
+                active={state.active === 'topOptionsDropdown'}
                 id='topOptionsDropdown'
                 menuRole='menu'
-                onClick={() => states.setActive('topOptionsDropdown')}
+                onClick={() =>
+                  setState(prevState => ({
+                    ...prevState,
+                    active: 'topOptionsDropdown'
+                  }))
+                }
               >
                 <h6 className='dropdown-header'>Songs</h6>
                 <NavDropdown.Item
@@ -230,17 +248,26 @@ export default function NavBar ({
                 title={
                   <Image
                     id='profpic'
-                    src={profPic !== '' ? profPic : DefaultPic}
+                    src={
+                      state.profileInfo.profPic !== ''
+                        ? state.profileInfo.profPic
+                        : DefaultPic
+                    }
                     alt='prof pic'
                     width={32}
                     height={32}
                   />
                 }
-                active={states.active === 'profDropdown'}
+                active={state.active === 'profDropdown'}
                 id='profDropdown'
                 menuRole='menu'
                 align='end'
-                onClick={() => states.setActive('profDropdown')}
+                onClick={() =>
+                  setState(prevState => ({
+                    ...prevState,
+                    active: 'profDropdown'
+                  }))
+                }
               >
                 <NavDropdown.Item
                   id='profile-btn'
@@ -254,12 +281,12 @@ export default function NavBar ({
                   data-bs-toggle='modal'
                   data-bs-target='#visModal'
                 >
-                  Visualizer / Guide
+                  Guide / Visualizer
                 </NavDropdown.Item>
                 <NavDropdown.Item
                   id='logout-btn'
                   onClick={() => {
-                    clearOut()
+                    player.current?.disconnect()
                     signOut()
                   }}
                 >
