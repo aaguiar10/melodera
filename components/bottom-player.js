@@ -9,7 +9,7 @@ import InputGroup from 'react-bootstrap/InputGroup'
 import Button from 'react-bootstrap/Button'
 import SpotifyLogo from '../public/images/spotify_logo_white.png'
 import Link from 'next/link'
-import NextImage from 'next/image'
+import Image from 'next/image'
 import { useEffect, useState, Fragment, useRef, useContext } from 'react'
 import { useSession } from 'next-auth/react'
 import { AnalysisContext, ResultsContext } from '../utils/context'
@@ -190,17 +190,15 @@ export default function BottomPlayer ({
                       rel='noreferrer'
                       aria-label='Go to album on spotify'
                     >
-                      <NextImage
+                      <Image
                         className='img-fluid mb-1'
-                        id='spotiflogo'
                         src={SpotifyLogo}
                         width={70}
                         alt='spotify logo'
                       />
                       {state.artCover.image && (
-                        <NextImage
-                          id='artcover'
-                          className='img-fluid'
+                        <Image
+                          className='img-fluid artcover'
                           src={state.artCover.image}
                           width={128}
                           height={128}
@@ -536,17 +534,15 @@ export default function BottomPlayer ({
                       rel='noreferrer'
                       aria-label='Go to album on spotify'
                     >
-                      <NextImage
+                      <Image
                         className='img-fluid mb-1'
-                        id='spotiflogo'
                         src={SpotifyLogo}
                         width={35}
                         alt='spotify logo'
                       />
                       {state.artCover.image && (
-                        <NextImage
-                          id='artcover'
-                          className='img-fluid'
+                        <Image
+                          className='img-fluid artcover'
                           src={state.artCover.image}
                           width={64}
                           height={64}

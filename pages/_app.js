@@ -37,7 +37,8 @@ export default function App ({
       currentDanceability: null,
       currentTimeSig: null
     },
-    showAlerts: { freeSub: true, playerNotReady: false }
+    showAlerts: { freeSub: true, playerNotReady: false },
+    showMix: null
   })
 
   const [dataState, setDataState] = useState({

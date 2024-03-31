@@ -1,5 +1,6 @@
 import HeadLayout from '../components/head-layout'
 import NavBar from '../components/navbar'
+import MixLayout from '../components/mix-layout'
 import AlertLayout from '../components/alert-layout'
 import FloatingBtns from '../components/floating-btns'
 import Results from '../components/results'
@@ -185,6 +186,7 @@ export default function Analysis () {
       {!state.featuresData && <FloatingBtns />}
       <section className='features'>
         <ProfileLayout />
+        <MixLayout />
         <GuideLayout />
         <div className='mb-1' id='results'>
           <Results />

@@ -21,7 +21,7 @@ export default function NavBar () {
     inputValue: ''
   })
   const inputSrchRef = useRef(null)
-  
+
   function toHome () {
     window.scroll({ top: 0, behavior: 'auto' })
     setState(prevState => ({
@@ -275,6 +275,17 @@ export default function NavBar () {
                   data-bs-target='#profModal'
                 >
                   Profile
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  id='my-mix-btn'
+                  onClick={() =>
+                    setState(prevState => ({
+                      ...prevState,
+                      showMix: true
+                    }))
+                  }
+                >
+                  My Mix
                 </NavDropdown.Item>
                 <NavDropdown.Item
                   id='vis-set-btn'

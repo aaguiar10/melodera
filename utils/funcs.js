@@ -152,27 +152,25 @@ export function getMap (tframesRef) {
 
 // sync playback of Spotify client with Melodera
 export function syncPlayer (state, setState, session) {
-  if (state.profileInfo.subscription === 'free') {
-    fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-      headers: {
-        Authorization: `Bearer ${session.user.accessToken}`
+  fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+    headers: {
+      Authorization: `Bearer ${session.user.accessToken}`
+    }
+  })
+    .then(e => e.json())
+    .then(data => {
+      if (data?.item?.id) {
+        getFeatures(data.item.id, session, setState)
+        getAnalysis(data.item.id, session, setState)
       }
     })
-      .then(e => e.json())
-      .then(data => {
-        if (data?.item?.id) {
-          getFeatures(data.item.id, session, setState)
-          getAnalysis(data.item.id, session, setState)
-        }
-      })
-      .catch(error => {
-        console.log(error)
-        if (!state.showAlerts.freeSub) {
-          setState(prevState => ({
-            ...prevState,
-            showAlerts: { ...prevState.showAlerts, freeSub: true }
-          }))
-        }
-      })
-  }
+    .catch(error => {
+      console.log(error)
+      if (!state.showAlerts.freeSub) {
+        setState(prevState => ({
+          ...prevState,
+          showAlerts: { ...prevState.showAlerts, freeSub: true }
+        }))
+      }
+    })
 }
