@@ -7,7 +7,7 @@ import Button from 'react-bootstrap/Button'
 import Toast from 'react-bootstrap/Toast'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
+import Stack from 'react-bootstrap/Stack'
 import { useSession } from 'next-auth/react'
 import { useState, useContext } from 'react'
 import { playTrack, getAnalysis, getFeatures } from '../utils/funcs'
@@ -72,7 +72,9 @@ export default function MixLayout () {
           contentClassName='border-0'
         >
           {!mixState && state.showMix && (
-            <div className='spinner-border' role='status' />
+            <Modal.Body className='text-center' id='mixModalBody'>
+              <div className='spinner-border' role='status' />
+            </Modal.Body>
           )}
           {mixState && (
             <>
@@ -92,16 +94,20 @@ export default function MixLayout () {
                 <Container>
                   <Row>
                     <ol
-                      className='addResultText'
+                      className='overflow-scroll p-0 mx-auto my-0'
                       style={{
                         listStyle: 'none',
                         maxHeight: '50vh'
                       }}
                     >
                       {mixState?.tracks?.map((result, index) => (
-                        <Row key={`mixItem${index}`}>
+                        <Stack
+                          className='border-top border-dark py-1'
+                          direction='horizontal'
+                          key={`mixItem${index}`}
+                        >
                           <Link
-                            className='d-flex align-items-center align-items-lg-start flex-column col-auto'
+                            className='d-flex align-items-center flex-column col-auto'
                             href={
                               result.external_urls?.spotify ??
                               'https://www.spotify.com'
@@ -132,7 +138,10 @@ export default function MixLayout () {
                               alt='Track Image'
                             />
                           </Link>
-                          <Col className='d-flex align-items-center'>
+                          <Stack>
+                            <p className='fw-light ms-auto mb-0'>
+                              Released: {result?.album?.release_date}
+                            </p>
                             <li
                               onClick={() => {
                                 playTrack(
@@ -146,7 +155,8 @@ export default function MixLayout () {
                                 getAnalysis(result.id, session, setState)
                               }}
                               key={result.id}
-                              className='addResultItem p-2'
+                              className='addResultItem px-1 mt-auto'
+                              style={{ fontWeight: '500' }}
                             >
                               {++index}.{' '}
                               {result.artists
@@ -154,8 +164,8 @@ export default function MixLayout () {
                                 .join(', ')}{' '}
                               — {result.name}
                             </li>
-                          </Col>
-                        </Row>
+                          </Stack>
+                        </Stack>
                       ))}
                     </ol>
                   </Row>

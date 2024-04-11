@@ -63,7 +63,10 @@ export default function AddResult ({ resultId, category, toggledAdd }) {
         key={item.id}
         className='addResultItem'
       >
-        {++index}. {item.name}
+        {++index}.{' '}
+        {category === 'playlist' &&
+          `${item.artists.map(artist => artist.name).join(', ')} — `}
+        {item.name}
       </li>
     )
     return (
@@ -78,21 +81,7 @@ export default function AddResult ({ resultId, category, toggledAdd }) {
         {category === 'playlist' &&
           data.tracks.items
             .filter(result => result.track !== null)
-            .map((result, index) => (
-              <li
-                onClick={() => {
-                  playTrack(result.track.id, player, deviceId, session, state)
-                  getFeatures(result.track.id, session, setState)
-                  getAnalysis(result.track.id, session, setState)
-                }}
-                key={result.track.id}
-                className='addResultItem'
-              >
-                {++index}.{' '}
-                {result.track.artists.map(artist => artist.name).join(', ')} —{' '}
-                {result.track.name}
-              </li>
-            ))}
+            .map((result, index) => renderListItem(result.track, index))}
       </ol>
     )
   }

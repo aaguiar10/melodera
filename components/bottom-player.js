@@ -22,7 +22,6 @@ export default function BottomPlayer ({
   setShowPlistToast,
   showSongToast,
   setShowSongToast,
-  windowSmall,
   timer,
   dominantPitch,
   currPitch
@@ -30,22 +29,85 @@ export default function BottomPlayer ({
   const { data: session } = useSession()
   const [state, setState, player] = useContext(AnalysisContext)
   const [, , , setViewState] = useContext(ResultsContext)
+
   const [playerVolume, setPlayerVolume] = useState(0.8)
   const [addInPlist, setAddInPlist] = useState(true)
   const [playerSize, setPlayerSize] = useState(0)
-  const bottomPlayerRef = useRef(null)
+  const [playerBtnOptionsVert, setPlayerBtnOptionsVert] = useState(false)
+  const [isWindowLarge, setIsWindowLarge] = useState(window.innerWidth >= 992)
+
+  const trackDescriptionRef = useRef(null)
+  const trackNameRef = useRef(null)
+  const artistNameRef = useRef(null)
+  const albumNameRef = useRef(null)
+
+  const infoData = [
+    { title: 'Beats per bar', content: state.featuresData?.time_signature },
+    {
+      title: 'Key',
+      content: `${state.featuresData?.key} ${
+        state.featuresData?.mode == 1 ? ' Major' : ' Minor'
+      }`
+    },
+    {
+      title: 'Pitch',
+      content: dominantPitch ? ' ' + dominantPitch : '',
+      style: { backgroundColor: currPitch, width: '4rem' },
+      className: 'fw-bold text-center text-black border border-black'
+    },
+    { title: 'Mood', content: getMoodString(state.featuresData?.valence) },
+    {
+      title: 'Type',
+      content:
+        state.featuresData?.instrumentalness >= 0.7 ? 'Instrumental' : 'Vocal'
+    }
+  ]
 
   function skipStart () {
     if (player.current) {
-      player.current.previousTrack()
+      player.current
+        .getCurrentState()
+        .then(state => {
+          if (
+            state?.track_window?.previous_tracks.length > 0 &&
+            state?.position < 2500
+          )
+            player.current.previousTrack()
+          else
+            player.current.seek(0).catch(e => {
+              console.error(e)
+            })
+        })
+        .catch(error => console.error(error))
     }
   }
 
   function skipEnd () {
     if (player.current) {
-      player.current.nextTrack()
+      player.current
+        .getCurrentState()
+        .then(state => {
+          if (state?.track_window?.next_tracks.length > 0)
+            player.current.nextTrack()
+          else {
+            player.current.seek(0).catch(e => {
+              console.error(e)
+            })
+            player.current.pause()
+          }
+        })
+        .catch(error => console.error(error))
     }
   }
+
+  function handlePlayPause () {
+    if (state.profileInfo.subscription !== 'free') {
+      if (state.isPaused) resumeTrack(player, setState)
+      else pauseTrack(player, setState)
+    } else {
+      setShowDisabledToast(true)
+    }
+  } // handle play/pause button
 
   function popPlist () {
     fetch('/api/v1/me/playlists?limit=50', {
@@ -64,7 +126,7 @@ export default function BottomPlayer ({
         }))
       })
       .catch(error => {
-        console.log(error)
+        console.error(error)
       })
   } // show playlists in dropdown
 
@@ -132,6 +194,110 @@ export default function BottomPlayer ({
     }
   }
 
+  const renderProgressBar = () => (
+    <Row className={playerSize === 1 ? 'my-2' : 'mt-2'}>
+      <Col xs='auto'>
+        {((timer.progress % 60000) / 1000).toFixed(0) == 60
+          ? Math.floor(timer.progress / 60000) + 1 + ':00'
+          : Math.floor(timer.progress / 60000) +
+            ':' +
+            (((timer.progress % 60000) / 1000).toFixed(0) < 10 ? '0' : '') +
+            ((timer.progress % 60000) / 1000).toFixed(0)}
+      </Col>
+      <Col className='d-flex align-items-center my-auto px-0'>
+        <Form.Range
+          min='0'
+          max='100'
+          className='inputRange'
+          id='progress-range'
+          value={(timer.progress / timer.duration) * 100}
+          step={(1000 / timer.duration) * 100}
+          onChange={event => {
+            state.profileInfo.subscription !== 'free'
+              ? player.current
+                  .seek((event?.target.value / 100) * timer.duration)
+                  .catch(e => console.error(e))
+              : setShowDisabledToast(true)
+          }}
+          style={{
+            backgroundSize:
+              ((timer.progress / timer.duration) * 100 * 100) / 100 + '% 100%'
+          }}
+        />
+      </Col>
+      <Col xs='auto'>
+        {~~(((timer.duration / 1000) % 3600) / 60) +
+          ':' +
+          (~~(timer.duration / 1000) % 60 < 10 ? '0' : '') +
+          (~~(timer.duration / 1000) % 60)}
+      </Col>
+    </Row>
+  )
+
+  const renderTrackInfo = () => (
+    <div
+      ref={trackDescriptionRef}
+      className='track-description text-start text-white'
+    >
+      <div ref={trackNameRef}>{state.spotifyObj.currentTrackInfo?.name}</div>
+      <div ref={artistNameRef} className='text-white-50'>
+        {state.spotifyObj.currentTrackInfo?.artists
+          .map(eachArtist => eachArtist.name)
+          .join(', ')}
+      </div>
+      {playerSize === 1 && (
+        <div ref={albumNameRef} className='text-white-50'>
+          {state.spotifyObj.currentTrackInfo?.album.album_type +
+            ': ' +
+            state.spotifyObj.currentTrackInfo?.album.name}
+        </div>
+      )}
+    </div>
+  )
+
+  const renderAlbumArt = () => (
+    <Link
+      className='d-flex align-items-center align-items-lg-start flex-column col-auto'
+      href={state.artCover.link ?? 'https://www.spotify.com'}
+      target='_blank'
+      rel='noreferrer'
+      aria-label='Go to album on spotify'
+    >
+      <Image
+        className='img-fluid mb-1'
+        src={SpotifyLogo}
+        width={playerSize < 1 ? 35 : 70}
+        alt='spotify logo'
+      />
+      {state.artCover.image && (
+        <Image
+          className='img-fluid artcover'
+          src={state.artCover.image}
+          width={playerSize < 1 ? 64 : 128}
+          height={playerSize < 1 ? 64 : 128}
+          alt='cover'
+          priority
+        />
+      )}
+    </Link>
+  )
+
+  const renderInfoCol = (info, index) => (
+    <Col xs='auto' key={index}>
+      <div>{info.title}</div>
+      <div style={info.style} className={info.className}>
+        {info.content}
+      </div>
+    </Col>
+  )
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsWindowLarge(window.innerWidth >= 992)
+    }
+    window.addEventListener('resize', handleResize)
+  }, [])
+
   useEffect(() => {
     if (player.current) player.current.setVolume(playerVolume)
   }, [playerVolume])
@@ -140,20 +306,49 @@ export default function BottomPlayer ({
     if (playerSize > 1) setPlayerSize(0)
   }, [playerSize])
 
+  useEffect(() => {
+    const handleLongWidth = nameRef => {
+      setPlayerBtnOptionsVert(window.innerWidth < 320)
+      if (playerSize == 0 && window.innerWidth >= 576)
+        trackDescriptionRef.current?.style.setProperty('width', '60vw')
+      else trackDescriptionRef.current?.style.removeProperty('width')
+      if (
+        nameRef.current?.clientWidth > trackDescriptionRef.current?.clientWidth
+      ) {
+        nameRef.current.classList.add('bounce')
+        nameRef.current.style.setProperty(
+          '--translate-x',
+          `${
+            trackDescriptionRef.current.clientWidth -
+            nameRef.current.clientWidth
+          }px`
+        )
+      } else {
+        nameRef.current?.classList.remove('bounce')
+        nameRef.current?.style.setProperty('--translate-x', '0px')
+      }
+    }
+    const handleResize = () => {
+      handleLongWidth(trackNameRef)
+      handleLongWidth(artistNameRef)
+      handleLongWidth(albumNameRef)
+    }
+
+    handleResize()
+
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [state.spotifyObj.currentTrackInfo, playerSize])
+
   return (
     <>
       <div
         className='overflow-scroll fixed-bottom mh-100'
-        ref={bottomPlayerRef}
         style={{
-          '--bottom-player-bg':
-            'rgb(' +
-            state.artCover.color?.rgbMuted[0] +
-            ', ' +
-            state.artCover.color?.rgbMuted[1] +
-            ', ' +
-            state.artCover.color?.rgbMuted[2] +
-            ')'
+          '--bottom-player-bg': `rgb(${state.artCover.color?.rgbMuted.join(
+            ', '
+          )})`
         }}
       >
         <FloatingBtns
@@ -166,62 +361,59 @@ export default function BottomPlayer ({
           className='pb-4 pb-lg-2 text-center text-light'
           fluid
         >
-          {playerSize != 0 ? (
+          {playerSize < 1 ? (
+            <Row
+              style={{
+                '--range-bg': `rgba(${state.artCover.color?.rgbLightVibrant.join(
+                  ', '
+                )}, 1)`
+              }}
+            >
+              <Col>
+                <div className='d-flex mt-2 flex-column align-items-start gap-2'>
+                  <Container fluid className='d-flex align-items-end px-0'>
+                    {renderAlbumArt()}
+                    <Container
+                      fluid
+                      className='d-flex flex-column justify-content-end gap-2'
+                    >
+                      {renderTrackInfo()}
+                    </Container>
+                    <Col className='flex-nowrap player-btn align-items-center'>
+                      <Button
+                        className={`player-btn-bg-lighten bi bi-${
+                          state.isPaused ? 'play' : 'pause'
+                        }-fill`}
+                        variant='light'
+                        id={state.isPaused ? 'resume-btn' : 'pause-btn'}
+                        onClick={handlePlayPause}
+                        style={{ fontSize: '3rem' }}
+                      />
+                    </Col>
+                  </Container>
+                </div>
+                {renderProgressBar()}
+              </Col>
+            </Row>
+          ) : (
             <Row
               className='mt-2 align-items-center justify-content-lg-between justify-content-center gap-lg-0 gap-2'
               style={{
-                '--range-bg':
-                  'rgba(' +
-                  state.artCover.color?.rgbLightVibrant[0] +
-                  ', ' +
-                  state.artCover.color?.rgbLightVibrant[1] +
-                  ', ' +
-                  state.artCover.color?.rgbLightVibrant[2] +
-                  ', 1)'
+                '--range-bg': `rgba(${state.artCover.color?.rgbLightVibrant.join(
+                  ', '
+                )}, 1)`
               }}
             >
               <Col>
                 <div className='d-flex flex-column align-items-center align-items-lg-start gap-2'>
                   <div className='d-flex align-items-end'>
-                    <Link
-                      className='d-flex align-items-center align-items-lg-start flex-column col-auto'
-                      href={state.artCover.link ?? 'https://www.spotify.com'}
-                      target='_blank'
-                      rel='noreferrer'
-                      aria-label='Go to album on spotify'
+                    {renderAlbumArt()}
+                    <Container
+                      fluid
+                      className='d-flex flex-column justify-content-end gap-2'
                     >
-                      <Image
-                        className='img-fluid mb-1'
-                        src={SpotifyLogo}
-                        width={70}
-                        alt='spotify logo'
-                      />
-                      {state.artCover.image && (
-                        <Image
-                          className='img-fluid artcover'
-                          src={state.artCover.image}
-                          width={128}
-                          height={128}
-                          alt='cover'
-                          priority
-                        />
-                      )}
-                    </Link>
-                    <Container className='d-flex flex-column justify-content-end gap-2'>
-                      <div className='track-description text-start text-white'>
-                        <div>{state.spotifyObj.currentTrackInfo?.name}</div>
-                        <div className='text-white-50'>
-                          {state.spotifyObj.currentTrackInfo?.artists
-                            .map(eachArtist => eachArtist.name)
-                            .join(', ')}
-                        </div>
-                        <div className='text-white-50'>
-                          {state.spotifyObj.currentTrackInfo?.album.album_type +
-                            ': ' +
-                            state.spotifyObj.currentTrackInfo?.album.name}
-                        </div>
-                      </div>
-                      <ButtonGroup size='sm'>
+                      {renderTrackInfo()}
+                      <ButtonGroup vertical={playerBtnOptionsVert} size='sm'>
                         <Button
                           size='sm'
                           variant='dark'
@@ -237,7 +429,7 @@ export default function BottomPlayer ({
                         </Button>
                         <Dropdown
                           as={ButtonGroup}
-                          drop={!windowSmall ? 'end' : 'down-centered'}
+                          drop={isWindowLarge ? 'end' : 'down-centered'}
                           onClick={popPlist}
                           className='flex-grow-1'
                         >
@@ -309,49 +501,7 @@ export default function BottomPlayer ({
                 </div>
               </Col>
               <Col lg='4'>
-                <Row className='my-2'>
-                  <Col xs='auto'>
-                    {((timer.progress % 60000) / 1000).toFixed(0) == 60
-                      ? Math.floor(timer.progress / 60000) + 1 + ':00'
-                      : Math.floor(timer.progress / 60000) +
-                        ':' +
-                        (((timer.progress % 60000) / 1000).toFixed(0) < 10
-                          ? '0'
-                          : '') +
-                        ((timer.progress % 60000) / 1000).toFixed(0)}
-                  </Col>
-                  <Col className='d-flex align-items-center my-auto px-0'>
-                    <Form.Range
-                      min='0'
-                      max='100'
-                      className='inputRange'
-                      id='progress-range'
-                      value={(timer.progress / timer.duration) * 100}
-                      step={(1000 / timer.duration) * 100}
-                      onChange={event => {
-                        state.profileInfo.subscription !== 'free'
-                          ? player.current
-                              .seek(
-                                (event?.target.value / 100) * timer.duration
-                              )
-                              .catch(e => console.log(e))
-                          : setShowDisabledToast(true)
-                      }}
-                      style={{
-                        backgroundSize:
-                          ((timer.progress / timer.duration) * 100 * 100) /
-                            100 +
-                          '% 100%'
-                      }}
-                    />
-                  </Col>
-                  <Col xs='auto'>
-                    {~~(((timer.duration / 1000) % 3600) / 60) +
-                      ':' +
-                      (~~(timer.duration / 1000) % 60 < 10 ? '0' : '') +
-                      (~~(timer.duration / 1000) % 60)}
-                  </Col>
-                </Row>
+                {renderProgressBar()}
                 <Container fluid className='d-flex justify-content-center'>
                   <Row className='flex-nowrap player-btn align-items-center gap-4'>
                     <Button
@@ -367,31 +517,12 @@ export default function BottomPlayer ({
                     />
                     <Button
                       as={Col}
-                      className={
-                        (state.isPaused ? 'd-block' : 'd-none') +
-                        ' player-btn-bg-lighten bi bi-play-circle-fill'
-                      }
+                      className={`player-btn-bg-lighten bi bi-${
+                        state.isPaused ? 'play' : 'pause'
+                      }-circle-fill`}
                       variant='light'
-                      id='resume-btn'
-                      onClick={() => {
-                        state.profileInfo.subscription !== 'free'
-                          ? resumeTrack(player, setState)
-                          : setShowDisabledToast(true)
-                      }}
-                    />
-                    <Button
-                      as={Col}
-                      className={
-                        (state.isPaused ? 'd-none' : 'd-block') +
-                        ' player-btn-bg-lighten bi bi-pause-circle-fill'
-                      }
-                      variant='light'
-                      id='pause-btn'
-                      onClick={() => {
-                        state.profileInfo.subscription !== 'free'
-                          ? pauseTrack(player, setState)
-                          : setShowDisabledToast(true)
-                      }}
+                      id={state.isPaused ? 'resume-btn' : 'pause-btn'}
+                      onClick={handlePlayPause}
                     />
                     <Button
                       as={Col}
@@ -408,7 +539,7 @@ export default function BottomPlayer ({
                 </Container>
               </Col>
               <Col className='d-flex gap-4 flex-column'>
-                <Row className='justify-content-lg-end align-items-center justify-content-center'>
+                <Row className='justify-content-lg-end align-items-center justify-content-center gap-2'>
                   <Button
                     as={Col}
                     xs='auto'
@@ -472,172 +603,8 @@ export default function BottomPlayer ({
                     />
                   </InputGroup>
                 </Row>
-                <Row className='justify-content-lg-end justify-content-center gap-lg-0 gap-2'>
-                  <Col xs='auto'>
-                    <div>Beats per bar</div>
-                    <div>{state.featuresData?.time_signature}</div>
-                  </Col>
-                  <Col xs='auto'>
-                    <div>Key</div>
-                    <div>
-                      {`${state.featuresData?.key} ${
-                        state.featuresData?.mode == 1 ? ' Major' : ' Minor'
-                      }`}
-                    </div>
-                  </Col>
-                  <Col xs='auto'>
-                    <div>Pitch</div>
-                    <div
-                      style={{
-                        backgroundColor: currPitch
-                      }}
-                      className='fw-bold text-black px-lg-2 px-4 border border-black'
-                    >
-                      {dominantPitch ? ' ' + dominantPitch : ''}
-                    </div>
-                  </Col>
-                  <Col xs='auto'>
-                    <div>Mood</div>
-                    <div>{getMoodString(state.featuresData?.valence)}</div>
-                  </Col>
-                  <Col xs='auto'>
-                    <div>Type</div>
-                    <div>
-                      {state.featuresData?.instrumentalness >= 0.7
-                        ? 'Instrumental'
-                        : 'Vocal'}
-                    </div>
-                  </Col>
-                </Row>
-              </Col>
-            </Row>
-          ) : (
-            <Row
-              style={{
-                '--range-bg':
-                  'rgba(' +
-                  state.artCover.color?.rgbLightVibrant[0] +
-                  ', ' +
-                  state.artCover.color?.rgbLightVibrant[1] +
-                  ', ' +
-                  state.artCover.color?.rgbLightVibrant[2] +
-                  ', 1)'
-              }}
-            >
-              <Col>
-                <div className='d-flex mt-2 flex-column align-items-start gap-2'>
-                  <Container fluid className='d-flex align-items-end px-0'>
-                    <Link
-                      className='d-flex align-items-center align-items-lg-start flex-column col-auto'
-                      href={state.artCover.link ?? 'https://www.spotify.com'}
-                      target='_blank'
-                      rel='noreferrer'
-                      aria-label='Go to album on spotify'
-                    >
-                      <Image
-                        className='img-fluid mb-1'
-                        src={SpotifyLogo}
-                        width={35}
-                        alt='spotify logo'
-                      />
-                      {state.artCover.image && (
-                        <Image
-                          className='img-fluid artcover'
-                          src={state.artCover.image}
-                          width={64}
-                          height={64}
-                          alt='cover'
-                          priority
-                        />
-                      )}
-                    </Link>
-                    <Container
-                      fluid
-                      className='d-flex flex-column justify-content-end gap-2'
-                    >
-                      <div className='track-description text-start text-white'>
-                        <div>{state.spotifyObj.currentTrackInfo?.name}</div>
-                        <div className='text-white-50'>
-                          {state.spotifyObj.currentTrackInfo?.artists
-                            .map(eachArtist => eachArtist.name)
-                            .join(', ')}
-                        </div>
-                      </div>
-                    </Container>
-                    <Col className='flex-nowrap player-btn align-items-center'>
-                      <Button
-                        className={
-                          (state.isPaused ? 'd-block' : 'd-none') +
-                          ' player-btn-bg-lighten bi bi-play-fill'
-                        }
-                        variant='light'
-                        id='resume-btn'
-                        onClick={() => {
-                          state.profileInfo.subscription !== 'free'
-                            ? resumeTrack(player, setState)
-                            : setShowDisabledToast(true)
-                        }}
-                        style={{ fontSize: '3rem' }}
-                      />
-                      <Button
-                        className={
-                          (state.isPaused ? 'd-none' : 'd-block') +
-                          ' player-btn-bg-lighten bi bi-pause-fill'
-                        }
-                        variant='light'
-                        id='pause-btn'
-                        onClick={() => {
-                          state.profileInfo.subscription !== 'free'
-                            ? pauseTrack(player, setState)
-                            : setShowDisabledToast(true)
-                        }}
-                        style={{ fontSize: '3rem' }}
-                      />
-                    </Col>
-                  </Container>
-                </div>
-                <Row className='mt-2'>
-                  <Col xs='auto'>
-                    {((timer.progress % 60000) / 1000).toFixed(0) == 60
-                      ? Math.floor(timer.progress / 60000) + 1 + ':00'
-                      : Math.floor(timer.progress / 60000) +
-                        ':' +
-                        (((timer.progress % 60000) / 1000).toFixed(0) < 10
-                          ? '0'
-                          : '') +
-                        ((timer.progress % 60000) / 1000).toFixed(0)}
-                  </Col>
-                  <Col className='d-flex align-items-center my-auto px-0'>
-                    <Form.Range
-                      min='0'
-                      max='100'
-                      className='inputRange'
-                      id='progress-range'
-                      value={(timer.progress / timer.duration) * 100}
-                      step={(1000 / timer.duration) * 100}
-                      onChange={event => {
-                        state.profileInfo.subscription !== 'free'
-                          ? player.current
-                              .seek(
-                                (event?.target.value / 100) * timer.duration
-                              )
-                              .catch(e => console.log(e))
-                          : setShowDisabledToast(true)
-                      }}
-                      style={{
-                        backgroundSize:
-                          ((timer.progress / timer.duration) * 100 * 100) /
-                            100 +
-                          '% 100%'
-                      }}
-                    />
-                  </Col>
-                  <Col xs='auto'>
-                    {~~(((timer.duration / 1000) % 3600) / 60) +
-                      ':' +
-                      (~~(timer.duration / 1000) % 60 < 10 ? '0' : '') +
-                      (~~(timer.duration / 1000) % 60)}
-                  </Col>
+                <Row className='justify-content-lg-end justify-content-center gap-2'>
+                  {infoData.map(renderInfoCol)}
                 </Row>
               </Col>
             </Row>

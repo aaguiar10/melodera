@@ -16,7 +16,7 @@ export default async function handler (req, res) {
     )
     res.status(200).json(data_2.body)
   } catch (error) {
-    console.log(error)
+    console.error(error)
     res.status(error.statusCode).send(error.body)
   }
 }

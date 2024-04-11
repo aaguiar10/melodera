@@ -13,18 +13,17 @@ import Image from 'next/image'
 import { useEffect, useContext } from 'react'
 import { useSession, getSession, signIn } from 'next-auth/react'
 import { AnalysisContext } from '../utils/context'
-import { resumeTrack, pauseTrack } from '../utils/funcs'
+import {
+  resumeTrack,
+  pauseTrack,
+  getFeatures,
+  getAnalysis
+} from '../utils/funcs'
 
 // main page after login
 export default function Analysis () {
   const { data: session, status } = useSession()
   const [state, setState, player, deviceId] = useContext(AnalysisContext)
-
-  const handleClick = () => {
-    if (player.current) {
-      player.current.activateElement()
-    }
-  }
 
   useEffect(() => {
     // When the user scrolls down 20px from the top of the page, show the button
@@ -64,7 +63,7 @@ export default function Analysis () {
           })
             .then(res => res.json())
             .then(data => {
-              let profilePic =
+              const profilePic =
                 data.images?.length !== 0 ? data?.images?.[1].url : ''
               setState(prevState => ({
                 ...prevState,
@@ -76,12 +75,11 @@ export default function Analysis () {
                   currentUser: data.id,
                   subscription: data.product,
                   followersCount: data.followers?.total
-                },
-                showSyncBtn: data.product === 'free' ? true : false
+                }
               }))
             })
         } catch (error) {
-          console.log(error)
+          console.error(error)
         }
       }
     }
@@ -98,13 +96,12 @@ export default function Analysis () {
 
         spot_player.addListener('ready', ({ device_id }) => {
           deviceId.current = device_id
-          player.current = spot_player
           fetch('/api/v1/me/player?device_id=' + device_id, {
             headers: {
               Authorization: `Bearer ${session.user.accessToken}`
             }
           }).catch(e => {
-            console.log(e)
+            console.error(e)
           })
         })
 
@@ -122,34 +119,39 @@ export default function Analysis () {
 
         // check player state
         spot_player.on('player_state_changed', state => {
+          //console.log('state:', JSON.stringify(state, null, 2))
           if (
             state?.track_window?.previous_tracks.find(
-              x => x.id === state.track_window.current_track.id
+              x => x.id === state?.track_window?.current_track.id
             ) &&
             state?.paused
           ) {
             pauseTrack(player, setState)
-          } else if (state?.paused) {
-            pauseTrack(player, setState)
-          } else if (!state?.paused) {
-            resumeTrack(player, setState)
+          } else if (state?.loading && state?.track_window?.current_track) {
+            getFeatures(
+              state?.track_window?.current_track.id,
+              session,
+              setState
+            )
+            getAnalysis(
+              state?.track_window?.current_track.id,
+              session,
+              setState
+            )
           }
+          if (state?.paused) pauseTrack(player, setState)
+          else if (!state?.paused) resumeTrack(player, setState)
         })
 
         // Connect to the player
         spot_player.connect().then(success => {
           if (success) {
+            player.current = spot_player
+            player.current.activateElement()
             console.log('Melodera player connected to Spotify')
           }
         })
-        window.addEventListener('click', handleClick, { once: true })
       }
-    }
-
-    return () => {
-      window.removeEventListener('click', handleClick, {
-        once: true
-      })
     }
   }, [session])
 
@@ -163,6 +165,7 @@ export default function Analysis () {
         />
         <div className='d-flex justify-content-center align-items-center vh-100'>
           <Image
+            id='loadingLogo'
             className='img-fluid'
             src={LogoPic}
             alt='logo'

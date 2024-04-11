@@ -58,16 +58,23 @@ export default function GuideLayout () {
               ></button>
             </div>
             <div className='modal-body' id='visModalBody'>
-              <p className='mx-auto'>---- Spotify Premium users ----</p>
-              <p className='mx-auto'>Full usage of the site&apos;s features.</p>
-              <p className='mx-auto'>---- Free users ----</p>
+              <p className='fw-bold mx-auto'>Spotify Premium users</p>
+              <p className='mx-auto'>Full access to Melodera&apos;s features</p>
+              <p className='fw-bold mx-auto'>Free users</p>
               <p className='mx-auto text-center'>
                 The official Spotify app is required to control audio. Sync
                 Melodera with Spotify&apos;s audio playback by selecting the
-                music icon <i className='bi bi-music-note-beamed' /> (visible to
-                Free users). If it is syncing incorrectly, reclick{' '}
-                <i className='bi bi-music-note-beamed' /> or rechoose the song
-                from the Spotify app.
+                music icon <i className='bi bi-music-note-beamed' /> after
+                selecting a song from the Spotify app
+              </p>
+              <p className='fw-bold mx-auto'>Player Info</p>
+              <p className='mx-auto text-center'>
+                If the visualizer is not syncing properly, reselect{' '}
+                <i className='bi bi-music-note-beamed' /> or the song
+              </p>
+              <p className='mx-auto text-center'>
+                There are two player modes: minimized and expanded. Select{' '}
+                <i className='bi bi-arrow-bar-up fs-5' /> to switch between them
               </p>
               <Image src={PlayerImg} className='img-fluid' alt='Player Guide' />
               <div className='text-center p-3'>

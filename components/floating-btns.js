@@ -27,27 +27,25 @@ export default function FloatingBtns ({ alt, playerSize, setPlayerSize }) {
           <i className='bi bi-arrow-up'></i>
         </Button>
       )}
-      {state.showSyncBtn && (
-        <Button
-          variant='light'
-          className={alt ? 'bg-transparent border-0' : ''}
-          id='btn-sync'
-          onClick={() => {
-            syncPlayer(state, setState, session)
-          }}
-          style={
-            state.showTopBtn
-              ? alt
-                ? { left: '3rem' }
-                : { left: '3rem', bottom: '20px' }
-              : alt
-              ? { left: '0px' }
-              : { bottom: '20px' }
-          }
-        >
-          <i className='bi bi-music-note-beamed' />
-        </Button>
-      )}
+      <Button
+        variant='light'
+        className={alt ? 'bg-transparent border-0' : ''}
+        id='btn-sync'
+        onClick={() => {
+          syncPlayer(state, setState, session)
+        }}
+        style={
+          state.showTopBtn
+            ? alt
+              ? { left: '3rem' }
+              : { left: '3rem', bottom: '20px' }
+            : alt
+            ? { left: '0px' }
+            : { bottom: '20px' }
+        }
+      >
+        <i className='bi bi-music-note-beamed' />
+      </Button>
       {alt && (
         <Button
           variant='light'

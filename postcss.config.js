@@ -21,7 +21,8 @@ module.exports = {
           './pages/**/*.{js,jsx,ts,tsx}',
           './components/**/*.{js,jsx,ts,tsx}',
           './node_modules/react-bootstrap/**/*.{js,jsx,ts,tsx}',
-          './node_modules/bootstrap/**/*.{js,jsx,ts,tsx}'
+          './node_modules/bootstrap/**/*.{js,jsx,ts,tsx}',
+          './node_modules/bootstrap-icons/**/*.{svg,css,scss}'
         ],
         defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
         safelist: {

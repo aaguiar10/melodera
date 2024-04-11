@@ -7,7 +7,7 @@ export default async function handler (req, res) {
       .getPalette()
       .then(palette => res.status(200).json(palette))
       .catch(error => {
-        console.log(error)
+        console.error(error)
         res.status(500).send(error)
       })
   } else {

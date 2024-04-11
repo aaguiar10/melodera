@@ -11,7 +11,7 @@ export default async function handler (req, res) {
         })
         res.status(200).json(data.body)
       } catch (error) {
-        console.log(error)
+        console.error(error)
         res.status(error.statusCode).send(error.body)
       }
     } else if (req.query.type === 'artists') {
@@ -22,7 +22,7 @@ export default async function handler (req, res) {
         })
         res.status(200).json(data.body)
       } catch (error) {
-        console.log(error)
+        console.error(error)
         res.status(error.statusCode).send(error.body)
       }
     } else if (req.query.type === 'albums') {
@@ -33,7 +33,7 @@ export default async function handler (req, res) {
         })
         res.status(200).json(data.body)
       } catch (error) {
-        console.log(error)
+        console.error(error)
         res.status(error.statusCode).send(error.body)
       }
     } else if (req.query.type === 'playlists') {
@@ -44,7 +44,7 @@ export default async function handler (req, res) {
         })
         res.status(200).json(data.body)
       } catch (error) {
-        console.log(error)
+        console.error(error)
         res.status(error.statusCode).send(error.body)
       }
     }
@@ -72,7 +72,7 @@ export default async function handler (req, res) {
           Object.assign({}, data_1.body, data_2.body, data_3.body, data_4.body)
         )
     } catch (error) {
-      console.log(error)
+      console.error(error)
       res.status(error.statusCode).send(error.body)
     }
   }

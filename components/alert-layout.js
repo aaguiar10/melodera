@@ -5,7 +5,7 @@ import { AnalysisContext } from '../utils/context'
 // Component for displaying alerts
 export default function AlertLayout () {
   const [state, setState] = useContext(AnalysisContext)
-  
+
   return (
     <>
       <Alert

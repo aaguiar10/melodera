@@ -21,7 +21,6 @@ export default function App ({
     fChartData: null,
     visState: { on: false, type: null },
     showTopBtn: null,
-    showSyncBtn: null,
     active: 'home',
     profileInfo: {},
     searchValue: '',
@@ -88,7 +87,7 @@ export default function App ({
     // Refetch session near every hour
     <SessionProvider
       session={session}
-      refetchInterval={1 * 60}
+      refetchInterval={60 * 1}
       refetchWhenOffline={false}
       refetchOnWindowFocus={true}
     >

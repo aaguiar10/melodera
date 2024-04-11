@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col'
 import { useEffect, useRef, useState, useContext } from 'react'
 import { AnalysisContext } from '../utils/context'
 import { useSession } from 'next-auth/react'
-import { resumeTrack, pauseTrack, syncPlayer } from '../utils/funcs'
+import { resumeTrack, pauseTrack, syncPlayer, debounce } from '../utils/funcs'
 
 // component for the features chart
 export default function FeaturesChart () {
@@ -29,7 +29,6 @@ export default function FeaturesChart () {
     centerY: null,
     radius: null
   })
-  const [windowSmall, setWindowSmall] = useState(null)
   const [currPosition, setCurrPosition] = useState(null)
   const [pitchCounter, setPitchCounter] = useState(0)
   const [beatCounter, setBeatCounter] = useState(0)
@@ -102,30 +101,21 @@ export default function FeaturesChart () {
     )
   }
 
-  function checkWindowWidth () {
-    if (window.innerWidth < 768) {
-      // dropdown view depending on screen width
-      setWindowSmall(true)
-    } else {
-      setWindowSmall(false)
-    }
-  }
-
   function doFullScreen () {
-    if (featuresChartContainer.current.requestFullscreen) {
-      featuresChartContainer.current.requestFullscreen()
-    } else if (featuresChartContainer.current.webkitRequestFullscreen) {
-      featuresChartContainer.current.webkitRequestFullscreen()
-    } else if (featuresChartContainer.current.mozRequestFullscreen) {
-      featuresChartContainer.current.mozRequestFullscreen()
-    } else if (featuresChartContainer.current.msRequestFullscreen) {
-      featuresChartContainer.current.msRequestFullscreen()
-    } else if (featuresChartContainer.current.mozEnterFullScreen) {
-      featuresChartContainer.current.mozEnterFullScreen()
-    } else if (featuresChartContainer.current.webkitEnterFullScreen) {
-      featuresChartContainer.current.webkitEnterFullScreen()
-    } else if (featuresChartContainer.current.msEnterFullScreen) {
-      featuresChartContainer.current.msEnterFullScreen()
+    const methods = [
+      'requestFullscreen',
+      'webkitRequestFullscreen',
+      'mozRequestFullscreen',
+      'msRequestFullscreen',
+      'mozEnterFullScreen',
+      'webkitEnterFullScreen',
+      'msEnterFullScreen'
+    ]
+    for (let method of methods) {
+      if (featuresChartContainer.current[method]) {
+        featuresChartContainer.current[method]()
+        break
+      }
     }
   }
 
@@ -137,7 +127,7 @@ export default function FeaturesChart () {
     }
     const time =
       (clickEvent.nativeEvent.offsetX / featuresChartRef.current.width) *
-      state.analysisData.track.duration *
+      state.analysisData.track?.duration *
       2
     const kind = getFloorRowPosition(
       clickEvent.nativeEvent.offsetY * 2,
@@ -151,7 +141,7 @@ export default function FeaturesChart () {
     )
     player.current
       ?.seek(Math.floor((seekTime < 0 ? 0 : seekTime) * 1000))
-      .catch(e => console.log(e))
+      .catch(e => console.error(e))
     setCurrPosition(seekTime)
   }
 
@@ -202,104 +192,55 @@ export default function FeaturesChart () {
       pitchSectionI: []
     }
 
+    const pitchNames = [
+      'C',
+      'C♯ / D♭',
+      'D',
+      'D♯ / E♭',
+      'E',
+      'F',
+      'F♯ / G♭',
+      'G',
+      'G♯ / A♭',
+      'A',
+      'A♯ / B♭',
+      'B'
+    ]
+
     arrayLikes.forEach((arrayLike, arrayLikeIndex) => {
       const startY = getRowPosition(arrayLikeIndex) * rowHeight
       const arrayLikeHeight = rowHeight / (arrayLikeIndex + 1)
       let pitchSegment = null
+      const key = arrayLikesKeys[arrayLikeIndex]
+
       arrayLike.forEach((section, sectionIndex) => {
-        if (
-          (arrayLikesKeys[arrayLikeIndex] == 'sections' ||
-            arrayLikesKeys[arrayLikeIndex] == 'bars' ||
-            arrayLikesKeys[arrayLikeIndex] == 'beats') &&
-          arrayLikesKeys[arrayLikeIndex] != undefined
-        ) {
+        if (['sections', 'bars', 'beats'].includes(key)) {
           fChartCtx.fillStyle = colors[sectionIndex % colors.length]
           fChartCtx.fillRect(
             (section.start / data.track.duration) * width,
-            getRowPosition(arrayLikeIndex) * rowHeight,
+            startY,
             (section.duration / data.track.duration) * width,
             arrayLikeHeight
           )
-          if (arrayLikesKeys[arrayLikeIndex] == 'beats') {
+          if (key === 'beats') {
             beatsObj['startTime'].push(section.start)
             beatsObj['beatDuration'].push(section.duration)
           }
         }
-        if (
-          arrayLikesKeys[arrayLikeIndex] == 'segments' &&
-          section.confidence >= 0.7
-        ) {
-          if (section.pitches.indexOf(1) === pitchSegment) {
-            return
-          }
-          pitchSegment = section.pitches.indexOf(1) // pitch val of 1 indicates pure tone
-          pitchesObj['pitchSectionI'].push(sectionIndex)
+        if (key === 'segments' && section.confidence >= 0.7) {
+          // find index of max pitch value; val of 1 indicates pure tone
+          const maxPitchIndex = section.pitches.reduce(
+            (iMax, val, i, arr) => (val > arr[iMax] ? i : iMax),
+            0
+          )
+          if (maxPitchIndex === pitchSegment) return // skip if same pitch as previous
+          pitchSegment = maxPitchIndex
 
-          switch (pitchSegment) {
-            case 0:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('C')
-              fChartCtx.fillStyle = colors[0]
-              break
-            case 1:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('C♯ / D♭')
-              fChartCtx.fillStyle = colors[1]
-              break
-            case 2:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('D')
-              fChartCtx.fillStyle = colors[2]
-              break
-            case 3:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('D♯ / E♭')
-              fChartCtx.fillStyle = colors[3]
-              break
-            case 4:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('E')
-              fChartCtx.fillStyle = colors[4]
-              break
-            case 5:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('F')
-              fChartCtx.fillStyle = colors[5]
-              break
-            case 6:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('F♯ / G♭')
-              fChartCtx.fillStyle = colors[6]
-              break
-            case 7:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('G')
-              fChartCtx.fillStyle = colors[7]
-              break
-            case 8:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('G♯ / A♭')
-              fChartCtx.fillStyle = colors[8]
-              break
-            case 9:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('A')
-              fChartCtx.fillStyle = colors[9]
-              break
-            case 10:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('A♯ / B♭')
-              fChartCtx.fillStyle = colors[10]
-              break
-            case 11:
-              pitchesObj['startTime'].push(section.start)
-              pitchesObj['pitch'].push('B')
-              fChartCtx.fillStyle = colors[11]
-              break
-            default:
-              pitchesObj['startTime'].push(null)
-              pitchesObj['pitch'].push(null)
-          }
+          pitchesObj['pitchSectionI'].push(sectionIndex)
+          pitchesObj['startTime'].push(section.start)
+          pitchesObj['pitch'].push(pitchNames[maxPitchIndex] || null)
+
+          fChartCtx.fillStyle = colors[maxPitchIndex] || null
           fChartCtx.fillRect(
             (section.start / data.track.duration) * width,
             getRowPosition(arrayLikeIndex) * rowHeight,
@@ -308,18 +249,13 @@ export default function FeaturesChart () {
           )
         }
       })
-      if (arrayLikesKeys[arrayLikeIndex] != 'segments') {
-        const label =
-          arrayLikesKeys[arrayLikeIndex].charAt(0).toUpperCase() +
-          arrayLikesKeys[arrayLikeIndex].slice(1)
-        fChartCtx.fillStyle = '#000'
-        fChartCtx.font = `bold ${arrayLikeHeight / 2.5}px Circular`
-        fChartCtx.fillText(label, 0, startY + arrayLikeHeight)
-      } else {
-        fChartCtx.fillStyle = '#000'
-        fChartCtx.font = `bold ${arrayLikeHeight / 2.5}px Circular`
-        fChartCtx.fillText('Pitch', 0, startY + arrayLikeHeight)
-      }
+      const label =
+        key !== 'segments'
+          ? key.charAt(0).toUpperCase() + key.slice(1)
+          : 'Pitch'
+      fChartCtx.fillStyle = '#000'
+      fChartCtx.font = `bold ${arrayLikeHeight / 2.5}px Circular`
+      fChartCtx.fillText(label, 0, startY + arrayLikeHeight)
     })
 
     setFChartProps({
@@ -351,10 +287,6 @@ export default function FeaturesChart () {
                   break
                 }
               }
-              /* do special case for a chosen song 
-              from Spotify client (free users) */
-              doneResizing(true)
-              return
             } else if (data?.item) {
               if (!data.is_playing) {
                 pauseTrack(player, setState)
@@ -363,11 +295,13 @@ export default function FeaturesChart () {
               }
               if (
                 resizeEvent.current ||
-                state.spotifyObj.currentTrack !== data.item.id
+                state.spotifyObj.currentTrack !== data?.item.id
               ) {
                 animReq.current = false
                 resizeEvent.current = false
-                syncPlayer(state, setState, session)
+                if (state.spotifyObj.currentTrack !== data?.item.id)
+                  syncPlayer(state, setState, session)
+                else resizingAnalysis(data?.item.id)
               } else {
                 setTimer({
                   ...timer,
@@ -393,7 +327,7 @@ export default function FeaturesChart () {
             }
           })
           .catch(error => {
-            console.log('Animation: ', error)
+            console.error('Animation: ', error)
           })
       } else {
         player.current &&
@@ -482,7 +416,7 @@ export default function FeaturesChart () {
   }
 
   const getRowPosition = index =>
-    index === 0 ? 0 : 1 / index + getRowPosition(index - 1)
+    index <= 0 ? 0 : 1 / index + getRowPosition(index - 1)
 
   const getFloorRowPosition = (searchPosition, rowHeight, i = 0, max = 4) =>
     i > max
@@ -517,53 +451,30 @@ export default function FeaturesChart () {
   }
 
   // resizing canvas
-  function doneResizing (specialCase = false) {
-    if (state.featuresData || specialCase) {
-      fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers: {
-          Authorization: `Bearer ${session.user.accessToken}`
-        }
-      })
-        .then(async e => {
-          const data = await e.json()
-          if (!data?.item) {
-            let isNull = true
-            while (isNull) {
-              try {
-                isNull = await checkNull()
-              } catch (error) {
-                console.error('Error in checkNull:', error)
-                break
-              }
+  function handleResizing () {
+    if (state.featuresData) {
+      if (state.profileInfo.subscription !== 'free') {
+        player.current
+          .getCurrentState()
+          .then(state => {
+            if (
+              state?.spotifyObj?.currentTrack !==
+              state?.track_window?.current_track.id
+            )
+              syncPlayer(
+                state,
+                setState,
+                session,
+                state?.track_window?.current_track.id
+              )
+            else {
+              resizingAnalysis(state?.track_window?.current_track.id)
             }
-            /* do special case for a chosen song 
-            from Spotify client (free users) */
-            doneResizing(true)
-            return
-          }
-          if (
-            state.spotifyObj.currentTrack &&
-            !resizeEvent.current &&
-            !specialCase
-          ) {
-            resizeEvent.current = true
-          }
-          if (
-            state.profileInfo.subscription === 'free' &&
-            state.spotifyObj.currentTrack !== data.item.id
-          ) {
-            syncPlayer(state, setState, session)
-          } else if (
-            state.spotifyObj.currentTrack &&
-            (!data.is_playing || data.is_playing) &&
-            data.item.id === state.spotifyObj.currentTrack
-          ) {
-            resizingAnalysis(data.item.id)
-          }
-        })
-        .catch(error => {
-          console.log(error)
-        })
+          })
+          .catch(error => console.error(error))
+      } else if (!resizeEvent.current) {
+        resizeEvent.current = true
+      }
     }
   }
 
@@ -580,46 +491,28 @@ export default function FeaturesChart () {
       const data = await res.json()
       return !data?.item
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   }
 
-  function resizingAnalysis (id) {
-    if (state.spotifyObj.currentTrack) {
-      resetCanvas(id)
+  async function resizingAnalysis (id) {
+    try {
+      const res = await fetch(`/api/analysis?id=${id}`, {
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`
+        }
+      })
+      const data = await res.json()
+      drawAnalysis(data)
+    } catch (error) {
+      console.error(error)
     }
-  } // helper function when resizing canvas
-
-  async function resetCanvas (id) {
-    let query = '/api/analysis?id=' + id
-    const e = await fetch(query, {
-      headers: {
-        Authorization: `Bearer ${session.user.accessToken}`
-      }
-    })
-    const data = await e.json()
-    drawAnalysis(data)
-  }
-
-  function debounce (func, delay) {
-    let timeoutId
-    return function (...args) {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        func.apply(this, args)
-      }, delay)
-    }
-  } // after a delay, a function executes once
+  } // helper function for resizing the canvas
 
   useEffect(() => {
-    if (state.analysisData && state.featuresData && state.artCover) {
+    if (state.analysisData && state.featuresData && state.artCover)
       drawAnalysis(state.analysisData)
-    }
-    function handleResize () {
-      checkWindowWidth()
-      doneResizing()
-    }
-    const debouncedResize = debounce(handleResize, 200)
+    const debouncedResize = debounce(handleResizing, 200)
     window.addEventListener('resize', debouncedResize)
     return () => {
       cancelAnimationFrame(animReq.current)
@@ -746,10 +639,6 @@ export default function FeaturesChart () {
     }
   }, [beatCounter, pitchCounter, sVisualProps, state.visState.type])
 
-  useEffect(() => {
-    checkWindowWidth()
-  }, [])
-
   return (
     <>
       <div
@@ -859,7 +748,6 @@ export default function FeaturesChart () {
           setShowPlistToast={setShowPlistToast}
           showSongToast={showSongToast}
           setShowSongToast={setShowSongToast}
-          windowSmall={windowSmall}
           timer={timer}
           dominantPitch={dominantPitch}
           currPitch={

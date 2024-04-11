@@ -7,7 +7,7 @@ export default function handler (req, res) {
       res.status(200).end()
     },
     function (error) {
-      console.log(error)
+      console.error(error)
       res.status(error.statusCode).send(error.body)
     }
   )
