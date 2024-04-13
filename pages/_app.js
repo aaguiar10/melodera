@@ -37,7 +37,8 @@ export default function App ({
       currentTimeSig: null
     },
     showAlerts: { freeSub: true, playerNotReady: false },
-    showMix: null
+    showMix: null,
+    sdkReady: false
   })
 
   const [dataState, setDataState] = useState({

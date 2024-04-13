@@ -13,6 +13,7 @@ import { resumeTrack, pauseTrack, syncPlayer, debounce } from '../utils/funcs'
 export default function FeaturesChart () {
   const { data: session } = useSession()
   const [state, setState, player] = useContext(AnalysisContext)
+  const prevWidth = useRef(window.innerWidth)
   const animReq = useRef(null)
   const resizeEvent = useRef(false)
   const featuresChartContainer = useRef(null)
@@ -452,7 +453,7 @@ export default function FeaturesChart () {
 
   // resizing canvas
   function handleResizing () {
-    if (state.featuresData) {
+    if (state.featuresData && window.innerWidth !== prevWidth.current) {
       if (state.profileInfo.subscription !== 'free') {
         player.current
           .getCurrentState()
@@ -475,6 +476,7 @@ export default function FeaturesChart () {
       } else if (!resizeEvent.current) {
         resizeEvent.current = true
       }
+      prevWidth.current = window.innerWidth
     }
   }
 

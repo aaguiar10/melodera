@@ -13,7 +13,7 @@ import Image from 'next/image'
 import { useEffect, useState, Fragment, useRef, useContext } from 'react'
 import { useSession } from 'next-auth/react'
 import { AnalysisContext, ResultsContext } from '../utils/context'
-import { resumeTrack, pauseTrack } from '../utils/funcs'
+import { resumeTrack, pauseTrack, debounce } from '../utils/funcs'
 
 // component for the audio player
 export default function BottomPlayer ({
@@ -35,7 +35,10 @@ export default function BottomPlayer ({
   const [playerSize, setPlayerSize] = useState(0)
   const [playerBtnOptionsVert, setPlayerBtnOptionsVert] = useState(false)
   const [isWindowLarge, setIsWindowLarge] = useState(window.innerWidth >= 992)
+  const [shouldSlide, setShouldSlide] = useState(null)
+  const [nameRefX, setNameRefX] = useState(null)
 
+  const prevWidth = useRef(window.innerWidth)
   const trackDescriptionRef = useRef(null)
   const trackNameRef = useRef(null)
   const artistNameRef = useRef(null)
@@ -239,14 +242,28 @@ export default function BottomPlayer ({
       ref={trackDescriptionRef}
       className='track-description text-start text-white'
     >
-      <div ref={trackNameRef}>{state.spotifyObj.currentTrackInfo?.name}</div>
-      <div ref={artistNameRef} className='text-white-50'>
+      <div
+        ref={trackNameRef}
+        className={shouldSlide ? 'slide' : ''}
+        style={{ '--translate-x': `${nameRefX?.track}px` }}
+      >
+        {state.spotifyObj.currentTrackInfo?.name}
+      </div>
+      <div
+        ref={artistNameRef}
+        className={`text-white-50${shouldSlide ? ' slide' : ''}`}
+        style={{ '--translate-x': `${nameRefX?.artist}px` }}
+      >
         {state.spotifyObj.currentTrackInfo?.artists
           .map(eachArtist => eachArtist.name)
           .join(', ')}
       </div>
       {playerSize === 1 && (
-        <div ref={albumNameRef} className='text-white-50'>
+        <div
+          ref={albumNameRef}
+          className={`text-white-50${shouldSlide ? ' slide' : ''}`}
+          style={{ '--translate-x': `${nameRefX?.album}px` }}
+        >
           {state.spotifyObj.currentTrackInfo?.album.album_type +
             ': ' +
             state.spotifyObj.currentTrackInfo?.album.name}
@@ -291,12 +308,36 @@ export default function BottomPlayer ({
     </Col>
   )
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsWindowLarge(window.innerWidth >= 992)
-    }
-    window.addEventListener('resize', handleResize)
-  }, [])
+  const handleLongWidth = nameRefs => {
+    if (!trackDescriptionRef.current) return
+
+    const isNotNarrow = playerSize === 0 && window.innerWidth >= 576
+    trackDescriptionRef.current.style.width = isNotNarrow ? '60vw' : null
+    let newRefs = { ...nameRefs }
+    nameRefs.forEach(({ ref, name }) => {
+      if (!ref.current) return
+      const isNameRefLonger =
+        ref.current.clientWidth > trackDescriptionRef.current.clientWidth
+      const translateX = isNameRefLonger
+        ? trackDescriptionRef.current.clientWidth - ref.current.clientWidth
+        : 0
+      // update translateX for the ref
+      newRefs[name] = translateX
+    })
+
+    setNameRefX(prevState => ({
+      ...prevState,
+      track: newRefs.track ?? 0,
+      artist: newRefs.artist ?? 0,
+      album: newRefs.album ?? 0
+    }))
+  }
+
+  const handleResize = () => {
+    setIsWindowLarge(window.innerWidth >= 992)
+    setPlayerBtnOptionsVert(window.innerWidth < 320)
+    setShouldSlide(false)
+  }
 
   useEffect(() => {
     if (player.current) player.current.setVolume(playerVolume)
@@ -307,39 +348,29 @@ export default function BottomPlayer ({
   }, [playerSize])
 
   useEffect(() => {
-    const handleLongWidth = nameRef => {
-      setPlayerBtnOptionsVert(window.innerWidth < 320)
-      if (playerSize == 0 && window.innerWidth >= 576)
-        trackDescriptionRef.current?.style.setProperty('width', '60vw')
-      else trackDescriptionRef.current?.style.removeProperty('width')
-      if (
-        nameRef.current?.clientWidth > trackDescriptionRef.current?.clientWidth
-      ) {
-        nameRef.current.classList.add('bounce')
-        nameRef.current.style.setProperty(
-          '--translate-x',
-          `${
-            trackDescriptionRef.current.clientWidth -
-            nameRef.current.clientWidth
-          }px`
-        )
-      } else {
-        nameRef.current?.classList.remove('bounce')
-        nameRef.current?.style.setProperty('--translate-x', '0px')
-      }
-    }
-    const handleResize = () => {
-      handleLongWidth(trackNameRef)
-      handleLongWidth(artistNameRef)
-      handleLongWidth(albumNameRef)
-    }
-
     handleResize()
+    const debouncedResize = debounce(() => {
+      if (window.innerWidth !== prevWidth.current) {
+        handleResize()
+        prevWidth.current = window.innerWidth
+      }
+    }, 200)
+    window.addEventListener('resize', debouncedResize)
+    return () => window.removeEventListener('resize', debouncedResize)
+  }, [state.spotifyObj.currentTrackInfo.name, playerSize])
 
-    window.addEventListener('resize', handleResize)
+  useEffect(() => {
+    if (shouldSlide == false)
+      handleLongWidth([
+        { ref: trackNameRef, name: 'track' },
+        { ref: artistNameRef, name: 'artist' },
+        { ref: albumNameRef, name: 'album' }
+      ])
+  }, [shouldSlide])
 
-    return () => window.removeEventListener('resize', handleResize)
-  }, [state.spotifyObj.currentTrackInfo, playerSize])
+  useEffect(() => {
+    if (nameRefX) setShouldSlide(true)
+  }, [nameRefX])
 
   return (
     <>

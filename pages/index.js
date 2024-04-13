@@ -18,8 +18,8 @@ export default function Home ({ providers }) {
         title='Melodera'
         description='Login page. Analyze songs, get recommendations, and view your listening habits'
       />
-      <Container fluid className='vh-100'>
-        <Row className='h-100 align-items-center'>
+      <Container fluid>
+        <Row className='mx-0 w-100 h-100 align-items-center justify-content-center top-50 start-50 translate-middle position-fixed'>
           <Col className='text-center'>
             <Row>
               <Col>

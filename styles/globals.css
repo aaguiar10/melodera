@@ -28,7 +28,7 @@
       transform: scale(1);
     }
     100% {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
   }
          
@@ -507,14 +507,16 @@
     right: 0;
   }
   
-  .bounce {
-    --translate-x: 0;
-    -moz-animation: bouncing-text 10s linear infinite;
-    -webkit-animation: bouncing-text 10s linear infinite;
-    animation: bouncing-text 10s linear infinite;
+  .slide {
+    -moz-transform: translateX(0%);
+    -webkit-transform: translateX(0%);
+    transform: translateX(0%);
+    -moz-animation: sliding-text 10s linear infinite;
+    -webkit-animation: sliding-text 10s linear infinite;
+    animation: sliding-text 10s linear infinite;
   }
-  
-  @keyframes bouncing-text {
+
+  @keyframes sliding-text {
     0%, 20% { 
       -moz-transform: translateX(0%);
       -webkit-transform: translateX(0%);

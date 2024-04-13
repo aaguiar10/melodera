@@ -25,20 +25,23 @@ export default function Analysis () {
   const { data: session, status } = useSession()
   const [state, setState, player, deviceId] = useContext(AnalysisContext)
 
+  const handleClick = () => {
+    if (player.current) {
+      player.current.activateElement()
+    }
+  }
+
+  // When the user scrolls down 20px from the top of the page, show the button
+  const handleScroll = () => {
+    setState(prevState => ({
+      ...prevState,
+      showTopBtn: window.scrollY > 20
+    }))
+  }
+
   useEffect(() => {
-    // When the user scrolls down 20px from the top of the page, show the button
-    function handleScroll () {
-      if (window.scrollY > 20) {
-        setState(prevState => ({
-          ...prevState,
-          showTopBtn: true
-        }))
-      } else {
-        setState(prevState => ({
-          ...prevState,
-          showTopBtn: false
-        }))
-      }
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      setState(prevState => ({ ...prevState, sdkReady: true }))
     }
     window.addEventListener('scroll', handleScroll)
     return () => {
@@ -54,55 +57,49 @@ export default function Analysis () {
       ) {
         signIn()
       } else if (status === 'authenticated') {
-        // initialize player and retrieve user profile
-        try {
-          fetch('/api/v1/me', {
-            headers: {
-              Authorization: `Bearer ${session.user.accessToken}`
-            }
+        // Retrieve user profile
+        fetch('/api/v1/me', {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            const profilePic =
+              data.images?.length !== 0 ? data?.images?.[1].url : ''
+            setState(prevState => ({
+              ...prevState,
+              profileInfo: {
+                ...prevState.profileInfo,
+                profPic: profilePic,
+                displayName: data.display_name,
+                userCountry: data.country,
+                currentUser: data.id,
+                subscription: data.product,
+                followersCount: data.followers?.total
+              }
+            }))
           })
-            .then(res => res.json())
-            .then(data => {
-              const profilePic =
-                data.images?.length !== 0 ? data?.images?.[1].url : ''
-              setState(prevState => ({
-                ...prevState,
-                profileInfo: {
-                  ...prevState.profileInfo,
-                  profPic: profilePic,
-                  displayName: data.display_name,
-                  userCountry: data.country,
-                  currentUser: data.id,
-                  subscription: data.product,
-                  followersCount: data.followers?.total
-                }
-              }))
-            })
-        } catch (error) {
-          console.error(error)
-        }
+          .catch(e => console.error(e))
       }
     }
-    window.onSpotifyWebPlaybackSDKReady = () => {
+  }, [session])
+
+  useEffect(() => {
+    if (state.sdkReady) {
       if (!player.current) {
+        // Initialize player
         const spot_player = new Spotify.Player({
           name: 'Melodera Player',
           getOAuthToken: async cb => {
-            let session = await getSession()
-            cb(session.user.accessToken)
+            const session = await getSession()
+            cb(session?.user?.accessToken)
           },
           volume: 0.8
         })
 
         spot_player.addListener('ready', ({ device_id }) => {
           deviceId.current = device_id
-          fetch('/api/v1/me/player?device_id=' + device_id, {
-            headers: {
-              Authorization: `Bearer ${session.user.accessToken}`
-            }
-          }).catch(e => {
-            console.error(e)
-          })
         })
 
         spot_player.addListener('not_ready', ({ device_id }) => {
@@ -118,8 +115,7 @@ export default function Analysis () {
         })
 
         // check player state
-        spot_player.on('player_state_changed', state => {
-          //console.log('state:', JSON.stringify(state, null, 2))
+        spot_player.on('player_state_changed', async state => {
           if (
             state?.track_window?.previous_tracks.find(
               x => x.id === state?.track_window?.current_track.id
@@ -128,6 +124,7 @@ export default function Analysis () {
           ) {
             pauseTrack(player, setState)
           } else if (state?.loading && state?.track_window?.current_track) {
+            const session = await getSession()
             getFeatures(
               state?.track_window?.current_track.id,
               session,
@@ -147,13 +144,18 @@ export default function Analysis () {
         spot_player.connect().then(success => {
           if (success) {
             player.current = spot_player
-            player.current.activateElement()
             console.log('Melodera player connected to Spotify')
           }
         })
       }
+      window.addEventListener('click', handleClick, { once: true })
     }
-  }, [session])
+    return () => {
+      window.removeEventListener('click', handleClick, {
+        once: true
+      })
+    }
+  }, [state.sdkReady])
 
   // Loading screen
   if (Object.keys(state.profileInfo).length === 0) {
@@ -163,7 +165,7 @@ export default function Analysis () {
           title='Melodera'
           description='Analyze songs, get recommendations, and view your listening habits'
         />
-        <div className='d-flex justify-content-center align-items-center vh-100'>
+        <div className='d-flex justify-content-center align-items-center h-100 w-100 top-50 start-50 translate-middle position-fixed'>
           <Image
             id='loadingLogo'
             className='img-fluid'
