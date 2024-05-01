@@ -14,12 +14,12 @@ export default function FloatingBtns ({ alt, playerSize, setPlayerSize }) {
     <ButtonGroup
       className='d-flex'
       aria-label='corner options'
-      style={{ bottom: '1.75rem' }}
+      style={{ marginBottom: '1.75rem' }}
     >
       {state.showTopBtn && (
         <Button
           variant='light'
-          className={alt ? 'bg-transparent border-0' : ''}
+          className={alt ? 'bg-transparent border-0' : 'lightBtnCustom'}
           id='btn-back-to-top'
           style={alt ? { left: '0px' } : { bottom: '20px' }}
           onClick={backToTop}
@@ -29,7 +29,7 @@ export default function FloatingBtns ({ alt, playerSize, setPlayerSize }) {
       )}
       <Button
         variant='light'
-        className={alt ? 'bg-transparent border-0' : ''}
+        className={alt ? 'bg-transparent border-0' : 'lightBtnCustom'}
         id='btn-sync'
         onClick={() => {
           syncPlayer(state, setState, session)

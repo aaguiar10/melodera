@@ -2,11 +2,51 @@ import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 import Collapse from 'react-bootstrap/Collapse'
 import Row from 'react-bootstrap/Row'
+import Toast from 'react-bootstrap/Toast'
 import Pagination from 'react-bootstrap/Pagination'
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import CategItem from './categ-item'
-import { useContext } from 'react'
+import { getSession } from 'next-auth/react'
+import { useState, useContext } from 'react'
 import { AnalysisContext, ResultsContext } from '../utils/context'
-import { range, getMap } from '../utils/funcs'
+import {
+  range,
+  getMap,
+  throttle,
+  getTopTracks,
+  getTopArtists
+} from '../utils/funcs'
+
+const createPlist = throttle(async (timeframe, setShowToast) => {
+  const tframe =
+    timeframe === 'short_term'
+      ? 'Last 4 weeks'
+      : timeframe === 'medium_term'
+      ? 'Last 6 months'
+      : 'All time'
+  const date = new Date()
+  const title = `Top Songs - ${tframe}`
+  const limit = 50
+  const session = await getSession()
+  fetch(`/api/topTracks?time_range=${timeframe}&limit=${limit}`, {
+    headers: { Authorization: `Bearer ${session.user.accessToken}` }
+  })
+    .then(resp => resp.json())
+    .then(data => {
+      const trackUris = data?.items.map(track => `spotify:track:${track.id}`)
+      return fetch(
+        `/api/v1/me/createPlist?timestamp=${date.toLocaleString()}&tracks=${trackUris}&title=${title}`,
+        {
+          headers: { Authorization: `Bearer ${session.user.accessToken}` }
+        }
+      )
+    })
+    .then(resp => resp.json())
+    .then(() =>
+      setShowToast(prevState => ({ ...prevState, [timeframe]: true }))
+    )
+    .catch(e => console.error(e))
+}, 2000)
 
 const Message = ({ result, id }) =>
   result?.message &&
@@ -19,11 +59,38 @@ const Message = ({ result, id }) =>
     </>
   )
 
-const Title = ({ category, result, id, tframesRef }) =>
-  id.includes('top') && (
+const renderTitle = (
+  setState,
+  category,
+  result,
+  id,
+  tframesRef,
+  showToast,
+  setShowToast
+) => {
+  const getTop = timeframe => {
+    if (id === 'topArtists') {
+      getTopArtists(setState, timeframe)
+    } else if (id === 'topTracks') {
+      getTopTracks(setState, timeframe)
+    }
+  }
+
+  return (
     <>
+      <Toast
+        show={showToast[result[id]]}
+        onClose={() =>
+          setShowToast(prevState => ({ ...prevState, [result[id]]: false }))
+        }
+        className='text-center trackOptionsToast'
+        delay='2000'
+        autohide
+      >
+        <Toast.Body>Top 50 added to Your Library</Toast.Body>
+      </Toast>
       <div
-        className='tFrameTitle h4'
+        className='tFrameTitle gap-4 align-items-end d-flex flex-wrap'
         ref={node => {
           const map = getMap(tframesRef)
           const resultId = `${category}_${result[id]}`
@@ -34,15 +101,40 @@ const Title = ({ category, result, id, tframesRef }) =>
           }
         }}
       >
-        {result[id] === 'short_term'
-          ? 'Last 4 weeks'
-          : result[id] === 'medium_term'
-          ? 'Last 6 months'
-          : 'All time'}
+        <div className='d-flex flex-grow-1 mb-0 justify-content-md-start justify-content-center h4'>
+          {result[id] === 'short_term'
+            ? 'Last 4 weeks'
+            : result[id] === 'medium_term'
+            ? 'Last 6 months'
+            : 'All time'}
+        </div>
+        <ButtonGroup
+          className='mx-auto justify-content-lg-end justify-content-center'
+          aria-label='top items timeframe buttons'
+        >
+          <Button variant='light' onClick={() => getTop('short_term')}>
+            Last 4 weeks
+          </Button>
+          <Button variant='light' onClick={() => getTop('medium_term')}>
+            Last 6 months
+          </Button>
+          <Button variant='light' onClick={() => getTop('long_term')}>
+            All time
+          </Button>
+          {id === 'topTracks' && (
+            <Button
+              variant='light'
+              onClick={() => createPlist(result[id], setShowToast)}
+            >
+              <i className='bi bi-music-note-list' />
+            </Button>
+          )}
+        </ButtonGroup>
       </div>
       <hr id={`tRangeTracksDivider_${result[id]}`} />
     </>
   )
+}
 
 const PaginationComponent = ({
   result,
@@ -59,7 +151,7 @@ const PaginationComponent = ({
   return (
     id !== 'featPlists' &&
     id !== 'newRels' && (
-      <Pagination className='justify-content-lg-end justify-content-center mt-4'>
+      <Pagination className='justify-content-lg-end justify-content-center mt-4 flex-wrap'>
         <Pagination.First
           onClick={() =>
             loadMoreResults(
@@ -216,28 +308,44 @@ export default function CategContainer ({ id, title, category, extraControls }) 
     setOffsetState,
     tframesRef
   ] = useContext(ResultsContext)
+  const [showToast, setShowToast] = useState({
+    short_term: false,
+    medium_term: false,
+    long_term: false
+  })
+
   let data =
     id !== 'recommendations'
       ? dataState.combinedResults
       : state.fChartData?.recommendations
   let mappedResults = data.map((result, index) => {
-    let items = result?.[`${category}s`]?.items ?? result?.items
+    let items =
+      id !== 'recommendations'
+        ? result?.[`${category}s`]?.items ?? result?.items
+        : result?.items?.slice(
+            offsetState[id] % 50,
+            (offsetState[id] % 50) + 10
+          )
     const totalItems =
       id !== 'recommendations'
         ? result?.[`${category}s`]?.total ?? result?.total
-        : 50
+        : result?.items.length
     let limit =
       Math.floor(totalItems / 10) * 10 - (totalItems % 10 === 0 ? 10 : 0)
     return (
       <Collapse in={!viewState.isCollapsed[id]} key={`${id}_${index}`}>
         <div>
           <Message result={result} id={id} />
-          <Title
-            category={category}
-            result={result}
-            id={id}
-            tframesRef={tframesRef}
-          />
+          {id.includes('top') &&
+            renderTitle(
+              setState,
+              category,
+              result,
+              id,
+              tframesRef,
+              showToast,
+              setShowToast
+            )}
           <PaginationComponent
             result={result}
             limit={limit}

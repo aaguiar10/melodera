@@ -18,17 +18,16 @@ import { resumeTrack, pauseTrack, debounce } from '../utils/funcs'
 // component for the audio player
 export default function BottomPlayer ({
   setShowDisabledToast,
-  showPlistToast,
   setShowPlistToast,
-  showSongToast,
   setShowSongToast,
+  setShowSimToast,
   timer,
   dominantPitch,
   currPitch
 }) {
   const { data: session } = useSession()
   const [state, setState, player] = useContext(AnalysisContext)
-  const [, , , setViewState] = useContext(ResultsContext)
+  const [, , viewState, setViewState] = useContext(ResultsContext)
 
   const [playerVolume, setPlayerVolume] = useState(0.8)
   const [addInPlist, setAddInPlist] = useState(true)
@@ -140,7 +139,7 @@ export default function BottomPlayer ({
       }
     })
       .then(() => {
-        setShowPlistToast({ ...showPlistToast, added: true, removed: false })
+        setShowPlistToast({ added: true, removed: false })
       })
       .catch(e => console.error(e))
   } // add to playlist functionality
@@ -155,7 +154,7 @@ export default function BottomPlayer ({
       }
     )
       .then(() => {
-        setShowPlistToast({ ...showPlistToast, added: false, removed: true })
+        setShowPlistToast({ added: false, removed: true })
       })
       .catch(e => console.error(e))
   } // remove from playlist functionality
@@ -175,9 +174,8 @@ export default function BottomPlayer ({
             isTrackSaved: !data[0]
           }
         }))
-        if (!data[0])
-          setShowSongToast({ ...showSongToast, added: true, removed: false })
-        else setShowSongToast({ ...showSongToast, added: false, removed: true })
+        if (!data[0]) setShowSongToast({ added: true, removed: false })
+        else setShowSongToast({ added: false, removed: true })
       })
       .catch(e => console.error(e))
   } // save track functionality
@@ -255,7 +253,7 @@ export default function BottomPlayer ({
         style={{ '--translate-x': `${nameRefX?.artist}px` }}
       >
         {state.spotifyObj.currentTrackInfo?.artists
-          .map(eachArtist => eachArtist.name)
+          ?.map(eachArtist => eachArtist.name)
           .join(', ')}
       </div>
       {playerSize === 1 && (
@@ -264,9 +262,9 @@ export default function BottomPlayer ({
           className={`text-white-50${shouldSlide ? ' slide' : ''}`}
           style={{ '--translate-x': `${nameRefX?.album}px` }}
         >
-          {state.spotifyObj.currentTrackInfo?.album.album_type +
+          {state.spotifyObj.currentTrackInfo?.album?.album_type +
             ': ' +
-            state.spotifyObj.currentTrackInfo?.album.name}
+            state.spotifyObj.currentTrackInfo?.album?.name}
         </div>
       )}
     </div>
@@ -284,6 +282,7 @@ export default function BottomPlayer ({
         className='img-fluid mb-1'
         src={SpotifyLogo}
         width={playerSize < 1 ? 35 : 70}
+        height={playerSize < 1 ? 10 : 21}
         alt='spotify logo'
       />
       {state.artCover.image && (
@@ -449,18 +448,19 @@ export default function BottomPlayer ({
                           size='sm'
                           variant='dark'
                           id='showSimBtn'
-                          onClick={() =>
+                          onClick={() => {
+                            if (!viewState.showSim) setShowSimToast(true)
                             setViewState(prevState => ({
                               ...prevState,
                               showSim: true
                             }))
-                          }
+                          }}
                         >
                           Show similar
                         </Button>
                         <Dropdown
                           as={ButtonGroup}
-                          drop={isWindowLarge ? 'end' : 'down-centered'}
+                          drop={isWindowLarge ? 'end' : 'start-centered'}
                           onClick={popPlist}
                           className='flex-grow-1'
                         >
@@ -482,7 +482,7 @@ export default function BottomPlayer ({
                             Playlist
                           </Dropdown.Toggle>
                           <Dropdown.Menu
-                            className='text-center'
+                            className='text-center text-break'
                             id='plistOptions'
                           >
                             <Dropdown.Header

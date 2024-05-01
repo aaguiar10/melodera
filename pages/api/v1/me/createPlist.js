@@ -4,7 +4,8 @@ export default async function handler (req, res) {
   spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
   try {
     const dateString = req.query.timestamp.split(',')[0]
-    const data_1 = await spotifyApi.createPlaylist(`My Mix (${dateString})`, {
+    const title = req.query.title
+    const data_1 = await spotifyApi.createPlaylist(`${title} (${dateString})`, {
       description: 'Curated by Melodera',
       public: true
     })

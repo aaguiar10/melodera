@@ -55,6 +55,7 @@ const SpotifyLink = ({ item }) => (
       src={SpotifyLogo}
       className='img-fluid'
       width={70}
+      height={21}
       alt='spotify logo'
     />
   </Link>
@@ -92,7 +93,7 @@ export default function CategItem ({ id, category, item, index }) {
 
   return (
     <div
-      className='text-white-top bg-light'
+      className='text-white-top bg-light text-break'
       onClick={handleClick}
       key={item?.id + `_${index}`}
     >

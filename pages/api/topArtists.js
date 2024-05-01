@@ -5,8 +5,8 @@ export default async function handler (req, res) {
   try {
     const data = await spotifyApi.getMyTopArtists({
       time_range: req.query.time_range,
-      limit: 10,
-      offset: req.query.offset
+      limit: req.query.limit ?? 10,
+      offset: req.query.offset ?? 0
     })
     res.status(200).json(data.body)
   } catch (error) {

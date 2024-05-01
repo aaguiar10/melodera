@@ -6,7 +6,7 @@ import { AnalysisContext, ResultsContext } from '../utils/context'
 
 // component for results (tracks, artists, albums, playlists)
 export default function Results () {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [state, setState] = useContext(AnalysisContext)
   const [
     dataState,
@@ -34,7 +34,7 @@ export default function Results () {
       artists: { id: 'artists', title: 'Artists', category: 'artist' },
       albums: { id: 'albums', title: 'Albums', category: 'album' },
       playlists: { id: 'playlists', title: 'Playlists', category: 'playlist' },
-      topTracks: { id: 'topTracks', title: 'Top Tracks', category: 'track' },
+      topTracks: { id: 'topTracks', title: 'Top Songs', category: 'track' },
       topArtists: { id: 'topArtists', title: 'Top Artists', category: 'artist' }
     }
     for (const key in data) {
@@ -242,151 +242,181 @@ export default function Results () {
 
   useEffect(() => {
     if (viewState.showSim) {
-      setOffsetState(prevOffset => ({ ...prevOffset, recommendations: 0 }))
-    } else {
-      setOffsetState(prevOffset => ({ ...prevOffset, recommendations: null }))
-    }
-  }, [viewState.showSim])
-
-  useEffect(() => {
-    if (state.renderType.home) {
-      resetState()
-      let date = new Date()
-      let timestampISO = new Date(
-        date.getTime() - date.getTimezoneOffset() * 60000
-      ).toISOString()
-      try {
-        fetch(
-          '/api/getHomeContent?user_country=' +
-            state.profileInfo.userCountry +
-            '&timestamp=' +
-            timestampISO,
-          {
-            headers: {
-              Authorization: `Bearer ${session.user.accessToken}`
-            }
-          }
-        )
-          .then(res => res.json())
-          .then(data => {
-            setDataState(prevState => ({
-              ...prevState,
-              result: data
-            }))
-          })
-      } catch (error) {
-        console.error('Error:', error)
+      const params = {
+        seed_artists: state.spotifyObj.currentArtists,
+        seed_tracks: state.spotifyObj.currentTrack,
+        target_energy: state.spotifyObj.currentEnergy,
+        target_valence: state.spotifyObj.currentValence,
+        target_tempo: state.spotifyObj.currentTempo,
+        target_danceability: state.spotifyObj.currentDanceability,
+        target_time_signature: state.spotifyObj.currentTimeSig,
+        market: state.profileInfo.userCountry
       }
-    } else if (state.renderType.library) {
-      resetState(true)
-      var fullResult = {}
-      Promise.all([
-        fetch('/api/v1/me/tracks', {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` }
-        }).then(resp => resp.json()),
-        fetch('/api/v1/me/following', {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` }
-        }).then(resp => resp.json()),
-        fetch('/api/v1/me/albums?&market=' + state.profileInfo.userCountry, {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` }
-        }).then(resp => resp.json()),
-        fetch('/api/v1/me/playlists', {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` }
-        }).then(resp => resp.json())
-      ])
+
+      const queryString = new URLSearchParams(params).toString()
+      const url = `/api/v1/recommendations?${queryString}`
+      fetch(url, {
+        headers: { Authorization: `Bearer ${session.user.accessToken}` }
+      })
+        .then(e => e.json())
         .then(data => {
-          data.map(function (result, index) {
-            if (index === 0) fullResult['tracks'] = result
-            else if (index === 1) {
-              let slice = result?.artists?.items.slice(0, 10)
-              let resultSlice = {
-                ...result,
-                artists: {
-                  ...result?.artists,
-                  items: slice
-                }
-              }
-              setOffsetState(prevOffset => ({
-                ...prevOffset,
-                artistCursorAfter: {
-                  0: result?.artists?.cursors?.after
-                }
-              }))
-              fullResult['artists'] = resultSlice?.artists
-            } else if (index === 2) fullResult['albums'] = result
-            else if (index === 3) fullResult['playlists'] = result
-          })
-          setDataState(prevState => ({
+          let recommendTracks = { items: data?.tracks }
+          setState(prevState => ({
             ...prevState,
-            result: fullResult
+            fChartData: {
+              ...prevState.fChartData,
+              recommendations: [recommendTracks]
+            }
           }))
+          setOffsetState(prevOffset => ({ ...prevOffset, recommendations: 0 }))
         })
         .catch(error => {
           console.error('Error:', error)
         })
-    } else if (state.renderType.search) {
-      resetState()
-      if (state.searchValue) {
-        fetch('/api/search?query=' + state.searchValue, {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` }
-        })
-          .then(e => e.json())
+    } else
+      setOffsetState(prevOffset => ({ ...prevOffset, recommendations: null }))
+  }, [viewState.showSim, state.spotifyObj.currentTrack])
+
+  useEffect(() => {
+    if (status === 'authenticated')
+      if (state.renderType.home) {
+        resetState()
+        let date = new Date()
+        let timestampISO = new Date(
+          date.getTime() - date.getTimezoneOffset() * 60000
+        ).toISOString()
+        try {
+          fetch(
+            '/api/getHomeContent?user_country=' +
+              state.profileInfo.userCountry +
+              '&timestamp=' +
+              timestampISO,
+            {
+              headers: {
+                Authorization: `Bearer ${session.user.accessToken}`
+              }
+            }
+          )
+            .then(res => res.json())
+            .then(data => {
+              setDataState(prevState => ({
+                ...prevState,
+                result: data
+              }))
+            })
+        } catch (error) {
+          console.error('Error:', error)
+        }
+      } else if (state.renderType.library) {
+        resetState(true)
+        var fullResult = {}
+        Promise.all([
+          fetch('/api/v1/me/tracks', {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
+          }).then(resp => resp.json()),
+          fetch('/api/v1/me/following', {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
+          }).then(resp => resp.json()),
+          fetch('/api/v1/me/albums', {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
+          }).then(resp => resp.json()),
+          fetch('/api/v1/me/playlists', {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
+          }).then(resp => resp.json())
+        ])
           .then(data => {
+            data.map((result, index) => {
+              if (index === 0) fullResult['tracks'] = result
+              else if (index === 1) {
+                let slice = result?.artists?.items.slice(0, 10)
+                let resultSlice = {
+                  ...result,
+                  artists: {
+                    ...result?.artists,
+                    items: slice
+                  }
+                }
+                setOffsetState(prevOffset => ({
+                  ...prevOffset,
+                  artistCursorAfter: {
+                    0: result?.artists?.cursors?.after
+                  }
+                }))
+                fullResult['artists'] = resultSlice?.artists
+              } else if (index === 2) fullResult['albums'] = result
+              else if (index === 3) fullResult['playlists'] = result
+            })
             setDataState(prevState => ({
               ...prevState,
-              result: data
+              result: fullResult
             }))
           })
           .catch(error => {
             console.error('Error:', error)
           })
-      }
-    } else if (state.renderType.topTracks) {
-      if (Object.keys(offsetState.topArtists).length > 0)
-        setOffsetState(prevOffset => ({
-          ...prevOffset,
-          topArtists: {}
-        }))
-      if (offsetState.topTracks[state.timeframe] !== undefined) {
-        scrollToTframe('track_' + state.timeframe)
-        return
-      }
-      setDataState(prevState => ({
-        ...prevState,
-        toggledAdd: {},
-        isLibrary: false
-      }))
-      setViewState(prev => ({
-        ...prev,
-        showTFrameItems: {
-          topTracks: prev.showTFrameItems.topTracks + 1,
-          topArtists: 0
+      } else if (state.renderType.search) {
+        resetState()
+        if (state.searchValue) {
+          fetch('/api/search?query=' + state.searchValue, {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
+          })
+            .then(e => e.json())
+            .then(data => {
+              setDataState(prevState => ({
+                ...prevState,
+                result: data
+              }))
+            })
+            .catch(error => {
+              console.error('Error:', error)
+            })
         }
-      }))
-    } else if (state.renderType.topArtists) {
-      if (Object.keys(offsetState.topTracks).length > 0)
-        setOffsetState(prevOffset => ({
-          ...prevOffset,
-          topTracks: {}
-        }))
-      if (offsetState.topArtists[state.timeframe] !== undefined) {
-        scrollToTframe('artist_' + state.timeframe)
-        return
-      }
-      setDataState(prevState => ({
-        ...prevState,
-        toggledAdd: {},
-        isLibrary: false
-      }))
-      setViewState(prev => ({
-        ...prev,
-        showTFrameItems: {
-          topArtists: prev.showTFrameItems.topArtists + 1,
-          topTracks: 0
+      } else if (state.renderType.topTracks) {
+        if (Object.keys(offsetState.topArtists).length > 0)
+          setOffsetState(prevOffset => ({
+            ...prevOffset,
+            topArtists: {}
+          }))
+        if (offsetState.topTracks[state.timeframe] !== undefined) {
+          scrollToTframe('track_' + state.timeframe)
+          return
         }
-      }))
-    }
-  }, [state.renderType])
+        setDataState(prevState => ({
+          ...prevState,
+          toggledAdd: {},
+          isLibrary: false
+        }))
+        setViewState(prev => ({
+          ...prev,
+          showTFrameItems: {
+            topTracks: prev.showTFrameItems.topTracks + 1,
+            topArtists: 0
+          }
+        }))
+      } else if (state.renderType.topArtists) {
+        if (Object.keys(offsetState.topTracks).length > 0)
+          setOffsetState(prevOffset => ({
+            ...prevOffset,
+            topTracks: {}
+          }))
+        if (offsetState.topArtists[state.timeframe] !== undefined) {
+          scrollToTframe('artist_' + state.timeframe)
+          return
+        }
+        setDataState(prevState => ({
+          ...prevState,
+          toggledAdd: {},
+          isLibrary: false
+        }))
+        setViewState(prev => ({
+          ...prev,
+          showTFrameItems: {
+            topArtists: prev.showTFrameItems.topArtists + 1,
+            topTracks: 0
+          }
+        }))
+      }
+  }, [state.renderType, status])
 
   useEffect(() => {
     if (dataState.result) {
@@ -441,43 +471,7 @@ export default function Results () {
   }, [offsetState.topArtists])
 
   useEffect(() => {
-    if (
-      offsetState.recommendations >= 0 &&
-      state.spotifyObj.currentTrack &&
-      viewState.showSim
-    ) {
-      const params = {
-        seed_artists: state.spotifyObj.currentArtists,
-        seed_tracks: state.spotifyObj.currentTrack,
-        target_energy: state.spotifyObj.currentEnergy,
-        target_valence: state.spotifyObj.currentValence,
-        target_tempo: state.spotifyObj.currentTempo,
-        target_danceability: state.spotifyObj.currentDanceability,
-        target_time_signature: state.spotifyObj.currentTimeSig,
-        market: state.profileInfo.userCountry,
-        limit: offsetState.recommendations + 10
-      }
-
-      const queryString = new URLSearchParams(params).toString()
-      const url = `/api/v1/recommendations?${queryString}`
-      fetch(url, {
-        headers: { Authorization: `Bearer ${session.user.accessToken}` }
-      })
-        .then(e => e.json())
-        .then(data => {
-          let recommendTracks = { items: data?.tracks }
-          setState(prevState => ({
-            ...prevState,
-            fChartData: {
-              ...prevState.fChartData,
-              recommendations: [recommendTracks]
-            }
-          }))
-        })
-        .catch(error => {
-          console.error('Error:', error)
-        })
-    } else if (!offsetState.recommendations) {
+    if (offsetState.recommendations === null) {
       setState(prevState => ({
         ...prevState,
         fChartData: {

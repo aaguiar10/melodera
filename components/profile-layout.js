@@ -10,17 +10,12 @@ export default function ProfileLayout () {
     if (state.profileInfo.length === 0) {
       return '...'
     }
-
     return (
       <article className='card' style={{ maxWidth: '540px' }}>
         <div className='row g-0'>
           <div className='col-sm-4 text-center'>
             <Image
-              src={
-                state.profileInfo.profPic !== ''
-                  ? state.profileInfo.profPic
-                  : DefaultPic
-              }
+              src={state.profileInfo.profPic ?? DefaultPic}
               className='img-fluid rounded-start'
               style={{ objectFit: 'contain' }}
               alt='Profile Pic'

@@ -1,6 +1,6 @@
 {
   "name": "melodera",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,26 +11,26 @@
   "dependencies": {
     "@fullhuman/postcss-purgecss": "^6.0.0",
     "@popperjs/core": "^2.11.8",
+    "@serwist/next": "^9.0.2",
     "autoprefixer": "^10.4.19",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "eslint": "8.57.0",
-    "eslint-config-next": "14.2.1",
+    "eslint-config-next": "^14.2.3",
     "html-react-parser": "^5.1.10",
-    "next": "^14.2.1",
+    "next": "^14.2.3",
     "next-auth": "^4.24.7",
-    "next-pwa": "^5.6.0",
     "node-vibrant": "^3.1.6",
     "postcss-flexbugs-fixes": "^5.0.2",
-    "postcss-preset-env": "^9.5.5",
-    "querystring": "^0.2.1",
+    "postcss-preset-env": "^9.5.9",
     "react": "18.2.0",
     "react-bootstrap": "^2.10.2",
     "react-dom": "18.2.0",
     "sharp": "^0.33.3",
-    "spotify-web-api-node": "^5.0.2"
+    "spotify-web-api-fetch": "^6.0.1"
   },
   "devDependencies": {
-    "@types/bootstrap": "^5.2.10"
+    "@types/bootstrap": "^5.2.10",
+    "serwist": "^9.0.2"
   }
 }

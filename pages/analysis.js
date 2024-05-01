@@ -7,11 +7,9 @@ import Results from '../components/results'
 import FeaturesChart from '../components/features-chart'
 import GuideLayout from '../components/guide-layout'
 import ProfileLayout from '../components/profile-layout'
-import LogoPic from '../public/images/melodera-logo.png'
 import Script from 'next/script'
-import Image from 'next/image'
 import { useEffect, useContext } from 'react'
-import { useSession, getSession, signIn } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
 import { AnalysisContext } from '../utils/context'
 import {
   resumeTrack,
@@ -22,7 +20,6 @@ import {
 
 // main page after login
 export default function Analysis () {
-  const { data: session, status } = useSession()
   const [state, setState, player, deviceId] = useContext(AnalysisContext)
 
   const handleClick = () => {
@@ -48,42 +45,6 @@ export default function Analysis () {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
-
-  useEffect(() => {
-    if (session) {
-      if (
-        session.error === 'RefreshAccessTokenError' ||
-        status === 'unauthenticated'
-      ) {
-        signIn()
-      } else if (status === 'authenticated') {
-        // Retrieve user profile
-        fetch('/api/v1/me', {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`
-          }
-        })
-          .then(res => res.json())
-          .then(data => {
-            const profilePic =
-              data.images?.length !== 0 ? data?.images?.[1].url : ''
-            setState(prevState => ({
-              ...prevState,
-              profileInfo: {
-                ...prevState.profileInfo,
-                profPic: profilePic,
-                displayName: data.display_name,
-                userCountry: data.country,
-                currentUser: data.id,
-                subscription: data.product,
-                followersCount: data.followers?.total
-              }
-            }))
-          })
-          .catch(e => console.error(e))
-      }
-    }
-  }, [session])
 
   useEffect(() => {
     if (state.sdkReady) {
@@ -157,52 +118,28 @@ export default function Analysis () {
     }
   }, [state.sdkReady])
 
-  // Loading screen
-  if (Object.keys(state.profileInfo).length === 0) {
-    return (
-      <>
-        <HeadLayout
-          title='Melodera'
-          description='Analyze songs, get recommendations, and view your listening habits'
-        />
-        <div className='d-flex justify-content-center align-items-center h-100 w-100 top-50 start-50 translate-middle position-fixed'>
-          <Image
-            id='loadingLogo'
-            className='img-fluid'
-            src={LogoPic}
-            alt='logo'
-            width={300}
-            height={300}
-            priority
-          />
-        </div>
-      </>
-    )
-  }
-
   return (
     <>
       <HeadLayout
         title='Melodera'
-        description='Analyze songs, get recommendations, and view your listening habits'
+        description='Analyze songs, get recommendations, and discover your listening trends'
       />
       <NavBar />
-      <AlertLayout />
-      {!state.featuresData && <FloatingBtns />}
-      <section className='features'>
-        <ProfileLayout />
-        <MixLayout />
-        <GuideLayout />
-        <div className='mb-1' id='results'>
-          <Results />
-        </div>
-        <hr
-          className={
-            state.analysisData ? 'dividerLine d-block' : 'dividerLine d-none'
-          }
-        />
-        {state.analysisData && state.featuresData && <FeaturesChart />}
-      </section>
+      {state.profileInfo.subscription && (
+        <>
+          <AlertLayout />
+          {!state.spotifyObj.currentTrack && <FloatingBtns />}
+          <section className='features'>
+            <ProfileLayout />
+            <MixLayout />
+            <GuideLayout />
+            <div className='mb-1' id='results'>
+              <Results />
+            </div>
+            {state.spotifyObj.currentTrack && <FeaturesChart />}
+          </section>
+        </>
+      )}
       <Script
         src='https://sdk.scdn.co/spotify-player.js'
         strategy='lazyOnload'

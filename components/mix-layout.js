@@ -10,7 +10,7 @@ import Row from 'react-bootstrap/Row'
 import Stack from 'react-bootstrap/Stack'
 import { useSession } from 'next-auth/react'
 import { useState, useContext } from 'react'
-import { playTrack, getAnalysis, getFeatures } from '../utils/funcs'
+import { playTrack, getAnalysis, getFeatures, throttle } from '../utils/funcs'
 import { AnalysisContext } from '../utils/context'
 
 // component for 'My Mix' modal
@@ -20,7 +20,7 @@ export default function MixLayout () {
   const [mixState, setMixState] = useState(null)
   const [showToast, setShowToast] = useState(false)
 
-  function fetchMix () {
+  const fetchMix = throttle(() => {
     fetch(`/api/v1/musicMix?market=${state.profileInfo?.userCountry}`, {
       headers: { Authorization: `Bearer ${session.user.accessToken}` }
     })
@@ -31,23 +31,23 @@ export default function MixLayout () {
       .catch(error => {
         console.error('Error:', error)
       })
-  }
-  function createMixPlist (tracks) {
+  }, 2000)
+  
+  const createMixPlist = throttle(tracks => {
     const trackUris = tracks?.map(track => `spotify:track:${track.id}`)
     const date = new Date()
+    const title = 'My Mix'
     fetch(
-      `/api/v1/me/createPlist?timestamp=${date.toLocaleString()}&tracks=${trackUris}`,
+      `/api/v1/me/createPlist?timestamp=${date.toLocaleString()}&tracks=${trackUris}&title=${title}`,
       {
         headers: {
           Authorization: `Bearer ${session.user.accessToken}`
         }
       }
     )
-      .then(() => {
-        setShowToast(true)
-      })
+      .then(() => setShowToast(true))
       .catch(e => console.error(e))
-  }
+  }, 2000)
 
   return (
     <>
@@ -94,7 +94,7 @@ export default function MixLayout () {
                 <Container>
                   <Row>
                     <ol
-                      className='overflow-scroll p-0 mx-auto my-0'
+                      className='overflow-scroll py-1 px-0 mx-auto my-0 text-break'
                       style={{
                         listStyle: 'none',
                         maxHeight: '50vh'
@@ -102,24 +102,37 @@ export default function MixLayout () {
                     >
                       {mixState?.tracks?.map((result, index) => (
                         <Stack
-                          className='border-top border-dark py-1'
+                          className='mix-item py-1 gap-1'
                           direction='horizontal'
                           key={`mixItem${index}`}
+                          onClick={() => {
+                            playTrack(
+                              result.id,
+                              player,
+                              deviceId,
+                              session,
+                              state
+                            )
+                            getFeatures(result.id, session, setState)
+                            getAnalysis(result.id, session, setState)
+                          }}
                         >
                           <Link
-                            className='d-flex align-items-center flex-column col-auto'
+                            className='d-flex align-items-start flex-column col-auto'
                             href={
                               result.external_urls?.spotify ??
                               'https://www.spotify.com'
                             }
                             target='_blank'
                             rel='noreferrer'
+                            onClick={e => e.stopPropagation()}
                             aria-label='Go to track on spotify'
                           >
                             <Image
                               className='img-fluid mb-1'
                               src={SpotifyLogo}
-                              width={70}
+                              width={35}
+                              height={10}
                               alt='spotify logo'
                             />
                             <Image
@@ -139,23 +152,12 @@ export default function MixLayout () {
                             />
                           </Link>
                           <Stack>
-                            <p className='fw-light ms-auto mb-0'>
+                            <p className='fw-light ms-auto mb-0 px-1'>
                               Released: {result?.album?.release_date}
                             </p>
                             <li
-                              onClick={() => {
-                                playTrack(
-                                  result.id,
-                                  player,
-                                  deviceId,
-                                  session,
-                                  state
-                                )
-                                getFeatures(result.id, session, setState)
-                                getAnalysis(result.id, session, setState)
-                              }}
                               key={result.id}
-                              className='addResultItem px-1 mt-auto'
+                              className='px-1 mt-auto'
                               style={{ fontWeight: '500' }}
                             >
                               {++index}.{' '}

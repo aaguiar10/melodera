@@ -5,8 +5,7 @@ export default async function handler (req, res) {
   try {
     const data = await spotifyApi.getMySavedAlbums({
       limit: 10,
-      offset: req.query.offset,
-      market: req.query.market
+      offset: req.query.offset ?? 0
     })
     res.status(200).json(data.body)
   } catch (error) {

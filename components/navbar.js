@@ -9,12 +9,18 @@ import LogoPic from '../public/images/melodera-logo.png'
 import DefaultPic from '../public/images/default_pic.png'
 import Image from 'next/image'
 import { useState, useRef, useEffect, useContext } from 'react'
-import { signOut } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { AnalysisContext } from '../utils/context'
-import { resumeTrack, pauseTrack } from '../utils/funcs'
+import {
+  resumeTrack,
+  pauseTrack,
+  getTopTracks,
+  getTopArtists
+} from '../utils/funcs'
 
 // component for navigation bar
 export default function NavBar () {
+  const { data: session } = useSession()
   const [state, setState, player] = useContext(AnalysisContext)
   const [navState, setNavState] = useState({
     isExpanded: false,
@@ -51,34 +57,6 @@ export default function NavBar () {
     }))
   }
 
-  function getTopTracks (timeframe) {
-    setState(prevState => ({
-      ...prevState,
-      timeframe: timeframe,
-      renderType: {
-        home: false,
-        search: false,
-        library: false,
-        topTracks: true,
-        topArtists: false
-      }
-    }))
-  }
-
-  function getTopArtists (timeframe) {
-    setState(prevState => ({
-      ...prevState,
-      timeframe: timeframe,
-      renderType: {
-        home: false,
-        search: false,
-        library: false,
-        topTracks: false,
-        topArtists: true
-      }
-    }))
-  }
-
   function handleSubmit (e) {
     e.preventDefault()
     setState(prevState => ({
@@ -95,6 +73,23 @@ export default function NavBar () {
       }
     }))
   }
+
+  useEffect(() => {
+    const profile = session?.user?.profile
+    if (profile)
+      setState(prevState => ({
+        ...prevState,
+        profileInfo: {
+          ...prevState.profileInfo,
+          profPic: profile?.images?.[1]?.url,
+          displayName: profile.display_name,
+          userCountry: profile.country,
+          currentUser: profile.id,
+          subscription: profile.product,
+          followersCount: profile.followersTotal
+        }
+      }))
+  }, [session])
 
   useEffect(() => {
     if (state.profileInfo.subscription !== 'free') {
@@ -200,110 +195,85 @@ export default function NavBar () {
                   }))
                 }
               >
-                <h6 className='dropdown-header'>Songs</h6>
                 <NavDropdown.Item
-                  id='track-short'
-                  onClick={() => getTopTracks('short_term')}
+                  className='text-center'
+                  id='top-song-nav'
+                  onClick={() => getTopTracks(setState, 'short_term')}
                 >
-                  Last 4 weeks
+                  Songs
                 </NavDropdown.Item>
                 <NavDropdown.Item
-                  id='track-med'
-                  onClick={() => getTopTracks('medium_term')}
+                  className='text-center'
+                  id='top-artist-nav'
+                  onClick={() => getTopArtists(setState, 'short_term')}
                 >
-                  Last 6 months
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  id='track-long'
-                  onClick={() => getTopTracks('long_term')}
-                >
-                  All time
-                </NavDropdown.Item>
-
-                <hr className='dropdown-divider' />
-                <h6 className='dropdown-header'>Artists</h6>
-                <NavDropdown.Item
-                  id='artist-short'
-                  onClick={() => getTopArtists('short_term')}
-                >
-                  Last 4 weeks
-                </NavDropdown.Item>
-
-                <NavDropdown.Item
-                  id='artist-med'
-                  onClick={() => getTopArtists('medium_term')}
-                >
-                  Last 6 months
-                </NavDropdown.Item>
-
-                <NavDropdown.Item
-                  id='artist-long'
-                  onClick={() => getTopArtists('long_term')}
-                >
-                  All time
+                  Artists
                 </NavDropdown.Item>
               </NavDropdown>
-              <NavDropdown
-                className='position-relative'
-                title={
-                  <Image
-                    id='profpic'
-                    src={
-                      state.profileInfo.profPic !== ''
-                        ? state.profileInfo.profPic
-                        : DefaultPic
-                    }
-                    alt='prof pic'
-                    width={32}
-                    height={32}
-                  />
-                }
-                active={state.active === 'profDropdown'}
-                id='profDropdown'
-                menuRole='menu'
-                align='end'
-                onClick={() =>
-                  setState(prevState => ({
-                    ...prevState,
-                    active: 'profDropdown'
-                  }))
-                }
-              >
-                <NavDropdown.Item
-                  id='profile-btn'
-                  data-bs-toggle='modal'
-                  data-bs-target='#profModal'
-                >
-                  Profile
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  id='my-mix-btn'
+              {session && (
+                <NavDropdown
+                  className='position-relative'
+                  title={
+                    <Image
+                      id='profpic'
+                      src={state.profileInfo.profPic ?? DefaultPic}
+                      alt='prof pic'
+                      width={32}
+                      height={32}
+                    />
+                  }
+                  active={state.active === 'profDropdown'}
+                  id='profDropdown'
+                  menuRole='menu'
+                  align='end'
                   onClick={() =>
                     setState(prevState => ({
                       ...prevState,
-                      showMix: true
+                      active: 'profDropdown'
                     }))
                   }
                 >
-                  My Mix
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  id='vis-set-btn'
-                  data-bs-toggle='modal'
-                  data-bs-target='#visModal'
-                >
-                  Guide / Visualizer
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  id='logout-btn'
-                  onClick={() => {
-                    player.current?.disconnect()
-                    signOut()
-                  }}
-                >
-                  Exit
-                </NavDropdown.Item>
-              </NavDropdown>
+                  <NavDropdown.Item
+                    className='text-center'
+                    id='profile-btn'
+                    data-bs-toggle='modal'
+                    data-bs-target='#profModal'
+                  >
+                    Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    className='text-center'
+                    id='my-mix-btn'
+                    onClick={() =>
+                      setState(prevState => ({
+                        ...prevState,
+                        showMix: true
+                      }))
+                    }
+                  >
+                    My Mix
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    className='text-center'
+                    id='vis-set-btn'
+                    data-bs-toggle='modal'
+                    data-bs-target='#visModal'
+                  >
+                    Guide / Visualizer
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item
+                    className='text-center'
+                    id='logout-btn'
+                    onClick={() => {
+                      player.current?.disconnect()
+                      signOut({ callbackUrl: '/' })
+                    }}
+                  >
+                    Exit
+                  </NavDropdown.Item>
+                </NavDropdown>
+              )}
             </Nav>
           </Navbar.Collapse>
         </Container>

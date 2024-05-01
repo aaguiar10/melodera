@@ -4,6 +4,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "jsx": "react"
+    "jsx": "react",
+    "lib": ["WebWorker"],
   }
 }

@@ -1,91 +1,168 @@
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+import Modal from 'react-bootstrap/Modal'
+import Button from 'react-bootstrap/Button'
+import Stack from 'react-bootstrap/Stack'
 import HeadLayout from '../components/head-layout'
 import styles from '../styles/Home.module.css'
 import LogoPic from '../public/images/melodera-logo.png'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getProviders, signIn } from 'next-auth/react'
+import { useState } from 'react'
+import { signIn } from 'next-auth/react'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './api/auth/[...nextauth]'
 
+const PrivacyPolicyModal = ({ show, handleClose }) => (
+  <Modal show={show} onHide={handleClose}>
+    <Modal.Header closeButton>
+      <Modal.Title>Privacy Policy</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <p>Last updated: [2024-04-30]</p>
+
+      <h5>What information is collected?</h5>
+      <p>
+        When you use Melodera, it collects some info about you from Spotify:
+      </p>
+      <ul>
+        <li>Your email</li>
+        <li>Your name, username, profile picture, and Spotify followers</li>
+        <li>Your Spotify subscription type and country</li>
+        <li>Your followed artists</li>
+        <li>Your top artists and content</li>
+        <li>Your public, private, and collaborative playlists</li>
+        <li>The saved content in Your Library</li>
+        <li>The content you&apos;re playing and Spotify Connect devices</li>
+      </ul>
+
+      <h5>How does it use this information?</h5>
+      <p>
+        Melodera respects your privacy. You can view its Spotify scope from the
+        source code{' '}
+        <Link href='https://github.com/aaguiar10/melodera/blob/main/pages/api/auth/%5B...nextauth%5D.js'>
+          here
+        </Link>
+        . It uses this info to:
+      </p>
+      <ul>
+        <li>Provide you with access to Melodera</li>
+        <li>Personalize your experience</li>
+        <li>Create and edit playlists</li>
+        <li>Add and remove Liked Songs from Your Library</li>
+        <li>Make recommendations</li>
+        <li>Play music with Melodera&apos;s player</li>
+      </ul>
+      <p>
+        Your information is not used for anything other than providing and
+        improving the application
+      </p>
+    </Modal.Body>
+  </Modal>
+)
+
 // starting page
-export default function Home ({ providers }) {
+export default function Home () {
+  const [show, setShow] = useState(false)
+
+  const handleClose = () => setShow(false)
+  const handleShow = () => setShow(true)
+
   return (
     <>
       <HeadLayout
         title='Melodera'
-        description='Login page. Analyze songs, get recommendations, and view your listening habits'
+        description='Login page. Analyze songs, get recommendations, and discover your listening trends'
       />
-      <Container fluid>
-        <Row className='mx-0 w-100 h-100 align-items-center justify-content-center top-50 start-50 translate-middle position-fixed'>
-          <Col className='text-center'>
-            <Row>
-              <Col>
-                <Image
-                  className='img-fluid'
-                  src={LogoPic}
-                  alt='logo'
-                  width={300}
-                  height={300}
-                  priority
-                />
-              </Col>
-            </Row>
-            <Row>
-              <Col
-                style={{
-                  fontSize: 'x-large',
-                  color: '#525366'
-                }}
-              >
-                Learn about your listening habits, analyze songs, and more!
-              </Col>
-            </Row>
-            <Row className='mt-4 gap-4 justify-content-center'>
-              <div style={{ fontWeight: 500 }}>
-                Currently available for Spotify Users
-              </div>
-              {Object.values(providers).map(provider => (
-                <button
-                  style={{ width: 'fit-content' }}
-                  className={`${styles['btn']} ${styles['btn-sm']} ${styles['btn-green']}`}
-                  onClick={() => signIn(provider.id, { callbackUrl: '/' })}
-                  key={provider.name}
-                >
-                  Get started
-                </button>
-              ))}
-            </Row>
-          </Col>
-          <footer
-            className='text-center mt-4 pt-4'
-            style={{ borderTop: '1px solid lightgray' }}
-          >
-            Created by{' '}
-            <Link
-              className='link-secondary'
-              href='https://www.linkedin.com/in/armani-aguiar/'
+      <Container fluid className='d-flex flex-column min-vh-100'>
+        <PrivacyPolicyModal show={show} handleClose={handleClose} />
+        <Stack className='flex-grow-1 text-center justify-content-center align-items-center'>
+          <Row className='gap-4 justify-content-center'>
+            <Col>
+              <Image
+                className='img-fluid'
+                src={LogoPic}
+                alt='logo'
+                width={300}
+                height={300}
+                priority
+              />
+            </Col>
+            <span
+              style={{
+                fontSize: 'x-large',
+                color: '#525366'
+              }}
             >
-              Armani Aguiar
-            </Link>
-          </footer>
-        </Row>
+              Uncover music insights through your listening trends, song
+              analysis, and more with Melodera
+            </span>
+            <span className='text-dark' style={{ fontWeight: 500 }}>
+              Currently available for Spotify Users
+            </span>
+            <Button
+              style={{ width: 'fit-content' }}
+              className={`${styles['btn-purple']} px-5`}
+              onClick={() => signIn('spotify', { callbackUrl: '/analysis' })}
+            >
+              Get started
+            </Button>
+          </Row>
+        </Stack>
+        <footer>
+          <Stack className='d-flex flex-column flex-md-row align-items-center justify-content-center gap-2 py-4'>
+            <div className='d-flex gap-2'>
+              <Button
+                className='link-secondary'
+                variant='link'
+                href='https://www.linkedin.com/in/armani-aguiar/'
+              >
+                <i className='bi bi-linkedin fs-4' />
+              </Button>
+              <Button
+                className='link-secondary'
+                variant='link'
+                href='https://github.com/aaguiar10'
+              >
+                <i className='bi bi-github fs-4' />
+              </Button>
+            </div>
+            <div className='d-flex justify-content-end align-items-center'>
+              <span>© 2024 Melodera</span>
+              <Button
+                className='link-secondary text-decoration-none'
+                variant='link'
+                onClick={handleShow}
+              >
+                Privacy Policy
+              </Button>
+            </div>
+          </Stack>
+        </footer>
       </Container>
     </>
   )
 }
+
 export async function getServerSideProps (context) {
-  const session = await getServerSession(context.req, context.res, authOptions)
-  // If the user is already logged in, redirect.
-  if (session) {
-    return { redirect: { destination: '/analysis' } }
-  }
-  const providers = await getProviders()
-  return {
-    props: {
-      providers
+  try {
+    const session = await getServerSession(
+      context.req,
+      context.res,
+      authOptions
+    )
+    // If the user is already logged in, redirect.
+    if (session) {
+      return { redirect: { destination: '/analysis' } }
+    }
+    return {
+      props: {}
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      props: {}
     }
   }
 }

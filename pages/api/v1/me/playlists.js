@@ -5,7 +5,7 @@ export default async function handler (req, res) {
   try {
     const data = await spotifyApi.getUserPlaylists({
       limit: req.query.limit ?? 10,
-      offset: req.query.offset
+      offset: req.query.offset ?? 0
     })
     res.status(200).json(data.body)
   } catch (error) {

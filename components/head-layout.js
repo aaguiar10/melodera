@@ -31,7 +31,7 @@ export default function HeadLayout ({
           sizes='16x16'
           href='/images/icons/favicon-16x16.png'
         />
-        <link rel='manifest' href='/manifest.manifest' />
+        <link rel='manifest' href='/manifest.webmanifest' />
       </Head>
     </>
   )

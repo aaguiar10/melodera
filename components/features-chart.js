@@ -45,6 +45,7 @@ export default function FeaturesChart () {
     removed: false
   })
   const [showDisabledToast, setShowDisabledToast] = useState(false)
+  const [showSimToast, setShowSimToast] = useState(false)
   const featuresChartRef = useRef(null)
   const songVisualRef = useRef(null)
   const colors = [
@@ -255,7 +256,9 @@ export default function FeaturesChart () {
           ? key.charAt(0).toUpperCase() + key.slice(1)
           : 'Pitch'
       fChartCtx.fillStyle = '#000'
-      fChartCtx.font = `bold ${arrayLikeHeight / 2.5}px Circular`
+      fChartCtx.font = `bold ${
+        arrayLikeHeight / (prevWidth.current < 576 ? 3 : 2.5)
+      }px Circular`
       fChartCtx.fillText(label, 0, startY + arrayLikeHeight)
     })
 
@@ -512,8 +515,7 @@ export default function FeaturesChart () {
   } // helper function for resizing the canvas
 
   useEffect(() => {
-    if (state.analysisData && state.featuresData && state.artCover)
-      drawAnalysis(state.analysisData)
+    if (state.analysisData) drawAnalysis(state.analysisData)
     const debouncedResize = debounce(handleResizing, 200)
     window.addEventListener('resize', debouncedResize)
     return () => {
@@ -643,6 +645,7 @@ export default function FeaturesChart () {
 
   return (
     <>
+      <hr className='dividerLine' />
       <div
         id='features-chart-container'
         ref={featuresChartContainer}
@@ -691,6 +694,18 @@ export default function FeaturesChart () {
           position='bottom-end'
           id='toastDiv'
         >
+          <Toast
+            onClose={() => setShowSimToast(false)}
+            show={showSimToast}
+            className='text-center trackOptionsToast'
+            delay='2500'
+            autohide
+          >
+            <Toast.Body>
+              Now showing{' '}
+              <span style={{ color: '#525366' }}>Similar Songs</span>
+            </Toast.Body>
+          </Toast>
           <Toast
             onClose={() => setShowSongToast({ ...showSongToast, added: false })}
             show={showSongToast.added}
@@ -746,10 +761,9 @@ export default function FeaturesChart () {
         </ToastContainer>
         <BottomPlayer
           setShowDisabledToast={setShowDisabledToast}
-          showPlistToast={showPlistToast}
           setShowPlistToast={setShowPlistToast}
-          showSongToast={showSongToast}
           setShowSongToast={setShowSongToast}
+          setShowSimToast={setShowSimToast}
           timer={timer}
           dominantPitch={dominantPitch}
           currPitch={

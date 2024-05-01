@@ -73,45 +73,48 @@ async function getFeaturesData (id, session, setState) {
     }
 
     data_2.key = keyMap[data_2.key] || null
+    if (!data.error && !data_2.error) {
+      setState(prevState => ({
+        ...prevState,
+        spotifyObj: {
+          currentTrack: data.id,
+          currentTrackInfo: data,
+          currentArtists: [...(data?.artists?.map(artist => artist.id) || [])],
+          currentValence: data_2.valence,
+          currentEnergy: data_2.energy,
+          currentTempo: data_2.tempo,
+          currentDanceability: data_2.danceability,
+          currentTimeSig: data_2.time_signature
+        },
+        featuresData: data_2
+      }))
 
-    setState(prevState => ({
-      ...prevState,
-      spotifyObj: {
-        currentTrack: data.id,
-        currentTrackInfo: data,
-        currentArtists: [...(data?.artists?.map(artist => artist.id) || [])],
-        currentValence: data_2.valence,
-        currentEnergy: data_2.energy,
-        currentTempo: data_2.tempo,
-        currentDanceability: data_2.danceability,
-        currentTimeSig: data_2.time_signature
-      },
-      featuresData: data_2
-    }))
-
-    fetch('/api/imgArt?img=' + data.album.images[1]?.url, {
-      headers: {
-        Authorization: `Bearer ${session.user.accessToken}`
-      }
-    })
-      .then(res => res.json())
-      .then(imgData => {
-        setState(prevState => ({
-          ...prevState,
-          artCover: {
-            ...prevState.artCover,
-            link: data.album.external_urls.spotify ?? 'https://www.spotify.com',
-            image: data.album.images[1].url ?? '/images/music-note-beamed.svg',
-            color: {
-              rgbLightVibrant: imgData?.LightVibrant.rgb ?? [255, 255, 255],
-              rgbVibrant: imgData?.Vibrant.rgb ?? [255, 255, 255],
-              rgbDarkVibrant: imgData?.DarkVibrant.rgb ?? [255, 255, 255],
-              rgbMuted: imgData?.Muted.rgb ?? [0, 0, 0]
-            }
-          }
-        }))
+      fetch('/api/imgArt?img=' + data.album.images[1]?.url, {
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`
+        }
       })
-      .catch(error => console.error('Error:', error))
+        .then(res => res.json())
+        .then(imgData => {
+          setState(prevState => ({
+            ...prevState,
+            artCover: {
+              ...prevState.artCover,
+              link:
+                data.album.external_urls.spotify ?? 'https://www.spotify.com',
+              image:
+                data.album.images[1].url ?? '/images/music-note-beamed.svg',
+              color: {
+                rgbLightVibrant: imgData?.LightVibrant.rgb ?? [255, 255, 255],
+                rgbVibrant: imgData?.Vibrant.rgb ?? [255, 255, 255],
+                rgbDarkVibrant: imgData?.DarkVibrant.rgb ?? [255, 255, 255],
+                rgbMuted: imgData?.Muted.rgb ?? [0, 0, 0]
+              }
+            }
+          }))
+        })
+        .catch(error => console.error('Error:', error))
+    }
   } catch (error) {
     console.error(error)
   }
@@ -125,10 +128,11 @@ async function fetchQuery (query, session, setState) {
       }
     })
     const data = await e.json()
-    setState(prevState => ({
-      ...prevState,
-      analysisData: data
-    }))
+    if (!data.error)
+      setState(prevState => ({
+        ...prevState,
+        analysisData: data
+      }))
   } catch (error) {
     console.error(error)
   }
@@ -210,3 +214,29 @@ export const syncPlayer = throttle(
   },
   2000
 )
+
+export const getTopTracks = (setState, timeframe) =>
+  setState(prevState => ({
+    ...prevState,
+    timeframe: timeframe,
+    renderType: {
+      home: false,
+      search: false,
+      library: false,
+      topTracks: true,
+      topArtists: false
+    }
+  }))
+
+export const getTopArtists = (setState, timeframe) =>
+  setState(prevState => ({
+    ...prevState,
+    timeframe: timeframe,
+    renderType: {
+      home: false,
+      search: false,
+      library: false,
+      topTracks: false,
+      topArtists: true
+    }
+  }))
