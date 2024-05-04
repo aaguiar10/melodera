@@ -30,7 +30,7 @@ export default async function handler (req, res) {
       seed_artists: artistIds,
       seed_tracks: trackIds,
       market: req.query.market,
-      min_popularity: 50,
+      min_popularity: 25,
       target_energy: energyAvg,
       target_valence: valenceAvg,
       limit: 50
