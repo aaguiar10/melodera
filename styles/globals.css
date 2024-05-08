@@ -296,9 +296,9 @@
     cursor: pointer;
   }
   .mix-item:hover {
-    -moz-box-shadow: 0 0 0.25rem #434B4E;
-    -webkit-box-shadow: 0 0 0.25rem #434B4E;
-     box-shadow: 0 0 0.25rem #434B4E;
+    -moz-box-shadow: 0 0 1px #434B4E;
+    -webkit-box-shadow: 0 0 1px #434B4E;
+     box-shadow: 0 0 1px #434B4E;
      background-color: var(--bs-light);
   }
 
