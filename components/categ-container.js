@@ -112,18 +112,24 @@ const renderTitle = (
           className='mx-auto justify-content-lg-end justify-content-center'
           aria-label='top items timeframe buttons'
         >
-          <Button variant='light' onClick={() => getTop('short_term')}>
+          <Button
+            className='btn-aubergine'
+            onClick={() => getTop('short_term')}
+          >
             Last 4 weeks
           </Button>
-          <Button variant='light' onClick={() => getTop('medium_term')}>
+          <Button
+            className='btn-aubergine'
+            onClick={() => getTop('medium_term')}
+          >
             Last 6 months
           </Button>
-          <Button variant='light' onClick={() => getTop('long_term')}>
+          <Button className='btn-aubergine' onClick={() => getTop('long_term')}>
             All time
           </Button>
           {id === 'topTracks' && (
             <Button
-              variant='light'
+              className='btn-aubergine'
               onClick={() => createPlist(result[id], setShowToast)}
             >
               <i className='bi bi-music-note-list' />
@@ -131,7 +137,10 @@ const renderTitle = (
           )}
         </ButtonGroup>
       </div>
-      <hr id={`tRangeTracksDivider_${result[id]}`} />
+      <hr
+        id={`tRangeTracksDivider_${result[id]}`}
+        className='section-divider'
+      />
     </>
   )
 }
@@ -365,7 +374,7 @@ export default function CategContainer ({ id, title, category, extraControls }) 
   })
 
   return (
-    <Container id={`${id}Container`} key={`${id}Container`}>
+    <Container fluid id={`${id}Container`} key={`${id}Container`}>
       <Row className='gap-2'>
         <Button
           className={`rounded-pill searchCateg${

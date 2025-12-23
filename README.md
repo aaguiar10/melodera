@@ -19,12 +19,12 @@ $ npm ci
 
 ## Testing
 
-For local testing, create an app from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/). Then within the app's settings, add redirect URI `http://localhost:3000/api/auth/callback/spotify` and save it.
+For local testing, create an app from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/). Then within the app's settings, add redirect URI `http://127.0.0.1:3000/api/auth/callback/spotify` and save it.
 
 Use the `Client ID` and `Client Secret` that Spotify provides to create a **.env.local** file (within the project folder) where you will store them along with your site url and a generated secret for [authorization](https://next-auth.js.org/configuration/options):
 
 ```dosini
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://127.0.0.1:3000
 SPOTIFY_CLIENT_ID=YOURCLIENTID
 SPOTIFY_CLIENT_SECRET=YOURCLIENTSECRET
 NEXTAUTH_SECRET=YOURSECRETKEY

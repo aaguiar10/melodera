@@ -1,12 +1,13 @@
-import spotifyApi from '../../../../lib/spotify'
+import { createSpotifyClient } from '../../../../lib/spotify'
 export default async function handler (req, res) {
-  spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
   // Check if track is already saved
+  const accessToken = req.headers?.authorization?.split(' ')[1]
+  const spotify = createSpotifyClient(accessToken)
   try {
-    const data = await spotifyApi.containsMySavedTracks([req.query.id])
-    res.status(200).json(data.body)
+    const data = await spotify.currentUser.tracks.hasSavedTracks([req.query.id])
+    res.status(200).json(data)
   } catch (error) {
     console.error(error)
-    res.status(error.statusCode).send(error.body)
+    res.status(error.status || 500).json({ error: error.message })
   }
 }

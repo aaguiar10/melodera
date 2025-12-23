@@ -78,62 +78,154 @@ export default function Home () {
       <Container fluid className='d-flex flex-column min-vh-100'>
         <PrivacyPolicyModal show={show} handleClose={handleClose} />
         <Stack className='flex-grow-1 text-center justify-content-center align-items-center'>
-          <Row className='gap-4 justify-content-center'>
-            <Col>
+          <Row className='gap-4 justify-content-center px-3'>
+            <Col xs={12} className='d-flex justify-content-center'>
               <Image
                 className='img-fluid'
                 src={LogoPic}
                 alt='logo'
-                width={300}
-                height={300}
+                width={280}
+                height={280}
                 priority
+                style={{
+                  filter: 'drop-shadow(0 0 30px rgba(99, 102, 241, 0.3))'
+                }}
               />
             </Col>
-            <span
-              style={{
-                fontSize: 'x-large',
-                color: '#525366'
-              }}
-            >
-              Uncover music insights through your listening trends, song
-              analysis, and more with Melodera
-            </span>
-            <span className='text-dark' style={{ fontWeight: 500 }}>
-              Currently available for Spotify Users
-            </span>
-            <Button
-              style={{ width: 'fit-content' }}
-              className={`${styles['btn-purple']} px-5`}
-              onClick={() => signIn('spotify', { callbackUrl: '/analysis' })}
-            >
-              Get started
-            </Button>
+            <Col xs={12}>
+              <h1
+                className='mb-3'
+                style={{
+                  fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                  fontWeight: 700,
+                  background:
+                    'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.025em'
+                }}
+              >
+                Discover Your Music DNA
+              </h1>
+              <p
+                style={{
+                  fontSize: 'clamp(1rem, 2.5vw, 1.15rem)',
+                  color: '#94a3b8',
+                  maxWidth: '500px',
+                  margin: '0 auto 1.5rem',
+                  lineHeight: 1.6
+                }}
+              >
+                Uncover insights through your listening trends, song analysis,
+                and personalized recommendations
+              </p>
+            </Col>
+            <Col xs={12}>
+              <span
+                className='d-inline-block mb-3 px-3 py-1'
+                style={{
+                  fontWeight: 500,
+                  color: '#64748b',
+                  fontSize: '0.9rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '9999px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                Currently available for Spotify Users
+              </span>
+            </Col>
+            <Col xs={12}>
+              <Button
+                style={{ width: 'fit-content', minWidth: '200px' }}
+                className={`${styles['btn-purple']} px-5 py-2`}
+                onClick={() => signIn('spotify', { callbackUrl: '/analysis' })}
+              >
+                <i className='bi bi-spotify me-2'></i>
+                Get Started
+              </Button>
+            </Col>
           </Row>
         </Stack>
         <footer>
           <Stack className='d-flex flex-column flex-md-row align-items-center justify-content-center gap-2 py-4'>
             <div className='d-flex gap-2'>
               <Button
-                className='link-secondary'
+                className='p-2'
                 variant='link'
                 href='https://www.linkedin.com/in/armani-aguiar/'
+                style={{
+                  color: '#64748b',
+                  transition: 'all 200ms ease',
+                  borderRadius: '50%',
+                  width: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.color = '#6366f1'
+                  e.currentTarget.style.borderColor = '#6366f1'
+                  e.currentTarget.style.boxShadow =
+                    '0 0 20px rgba(99, 102, 241, 0.3)'
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.color = '#64748b'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               >
-                <i className='bi bi-linkedin fs-4' />
+                <i className='bi bi-linkedin fs-5' />
               </Button>
               <Button
-                className='link-secondary'
+                className='p-2'
                 variant='link'
                 href='https://github.com/aaguiar10'
+                style={{
+                  color: '#64748b',
+                  transition: 'all 200ms ease',
+                  borderRadius: '50%',
+                  width: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.color = '#6366f1'
+                  e.currentTarget.style.borderColor = '#6366f1'
+                  e.currentTarget.style.boxShadow =
+                    '0 0 20px rgba(99, 102, 241, 0.3)'
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.color = '#64748b'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               >
-                <i className='bi bi-github fs-4' />
+                <i className='bi bi-github fs-5' />
               </Button>
             </div>
             <div className='d-flex justify-content-end align-items-center'>
-              <span>© 2024 Melodera</span>
+              <span style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                © 2024 Melodera
+              </span>
               <Button
-                className='link-secondary text-decoration-none'
+                className='text-decoration-none'
                 variant='link'
                 onClick={handleShow}
+                style={{
+                  color: '#94a3b8',
+                  transition: 'color 200ms ease'
+                }}
+                onMouseOver={e => (e.currentTarget.style.color = '#6366f1')}
+                onMouseOut={e => (e.currentTarget.style.color = '#94a3b8')}
               >
                 Privacy Policy
               </Button>

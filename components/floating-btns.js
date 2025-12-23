@@ -1,4 +1,3 @@
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Button from 'react-bootstrap/Button'
 import { useSession } from 'next-auth/react'
 import { useContext } from 'react'
@@ -11,50 +10,48 @@ export default function FloatingBtns ({ alt, playerSize, setPlayerSize }) {
   const [state, setState] = useContext(AnalysisContext)
 
   return (
-    <ButtonGroup
-      className='d-flex'
+    <div
+      className={alt ? 'player-floating-container' : 'd-flex'}
       aria-label='corner options'
-      style={{ marginBottom: '1.75rem' }}
     >
-      {state.showTopBtn && (
+      <div className={alt ? 'player-floating-left' : undefined}>
+        {state.showTopBtn && (
+          <Button
+            className={alt ? 'player-floating-btn' : 'lightBtnCustom'}
+            id='btn-back-to-top'
+            style={alt ? undefined : { bottom: '20px' }}
+            onClick={backToTop}
+          >
+            <i className='bi bi-arrow-up'></i>
+          </Button>
+        )}
         <Button
-          variant='light'
-          className={alt ? 'bg-transparent border-0' : 'lightBtnCustom'}
-          id='btn-back-to-top'
-          style={alt ? { left: '0px' } : { bottom: '20px' }}
-          onClick={backToTop}
+          className={alt ? 'player-floating-btn' : 'lightBtnCustom'}
+          id='btn-sync'
+          onClick={() => {
+            syncPlayer(state, setState, session)
+          }}
+          style={
+            alt
+              ? undefined
+              : state.showTopBtn
+              ? { left: '3rem', bottom: '20px' }
+              : { bottom: '20px' }
+          }
         >
-          <i className='bi bi-arrow-up'></i>
+          <i className='bi bi-music-note-beamed' />
         </Button>
-      )}
-      <Button
-        variant='light'
-        className={alt ? 'bg-transparent border-0' : 'lightBtnCustom'}
-        id='btn-sync'
-        onClick={() => {
-          syncPlayer(state, setState, session)
-        }}
-        style={
-          state.showTopBtn
-            ? alt
-              ? { left: '3rem' }
-              : { left: '3rem', bottom: '20px' }
-            : alt
-            ? { left: '0px' }
-            : { bottom: '20px' }
-        }
-      >
-        <i className='bi bi-music-note-beamed' />
-      </Button>
+      </div>
+
       {alt && (
         <Button
-          variant='light'
+          className='player-floating-btn'
           id='expandBtn'
           onClick={() => setPlayerSize(playerSize + 1)}
         >
           <i className='bi bi-arrow-bar-up fs-5' />
         </Button>
       )}
-    </ButtonGroup>
+    </div>
   )
 }

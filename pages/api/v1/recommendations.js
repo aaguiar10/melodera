@@ -1,22 +1,35 @@
-import spotifyApi from '../../../lib/spotify'
+import { createSpotifyClient } from '../../../lib/spotify'
 export default async function handler (req, res) {
   // Get Recommendations Based on Seeds / Features
-  spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
+  const accessToken = req.headers?.authorization?.split(' ')[1]
+  const spotify = createSpotifyClient(accessToken)
   try {
-    const data = await spotifyApi.getRecommendations({
-      seed_artists: [req.query.seed_artists],
-      seed_tracks: [req.query.seed_tracks],
-      target_energy: req.query.target_energy,
-      target_valence: req.query.target_valence,
-      target_tempo: req.query.target_tempo,
-      target_danceability: req.query.target_danceability,
-      target_time_signature: req.query.target_time_signature,
+    const data = await spotify.recommendations.get({
+      seed_artists: req.query.seed_artists
+        ? [req.query.seed_artists]
+        : undefined,
+      seed_tracks: req.query.seed_tracks ? [req.query.seed_tracks] : undefined,
+      target_energy: req.query.target_energy
+        ? parseFloat(req.query.target_energy)
+        : undefined,
+      target_valence: req.query.target_valence
+        ? parseFloat(req.query.target_valence)
+        : undefined,
+      target_tempo: req.query.target_tempo
+        ? parseFloat(req.query.target_tempo)
+        : undefined,
+      target_danceability: req.query.target_danceability
+        ? parseFloat(req.query.target_danceability)
+        : undefined,
+      target_time_signature: req.query.target_time_signature
+        ? parseInt(req.query.target_time_signature)
+        : undefined,
       market: req.query.market,
       limit: 50
     })
-    res.status(200).send(data.body)
+    res.status(200).send(data)
   } catch (error) {
     console.error(error)
-    res.status(error.statusCode).send(error.body)
+    res.status(error.status || 500).json({ error: error.message })
   }
 }

@@ -1,4 +1,5 @@
 import CategContainer from './categ-container'
+import { SkeletonCard } from './skeleton-loader'
 import { useEffect, useContext } from 'react'
 import { useSession } from 'next-auth/react'
 import { getMap } from '../utils/funcs'
@@ -485,20 +486,26 @@ export default function Results () {
   return (
     <>
       {!dataState.result || dataState.combinedResults.length === 0 ? (
-        <div className='d-flex mt-4 justify-content-center align-items-center'>
-          <div className='spinner-border' role='status' />
-        </div>
+        <SkeletonCard count={8} />
       ) : state.renderType.home &&
         dataState.result &&
         dataState.combinedResults.length === 1 ? (
         <>
-          <CategContainer
-            id='featPlists'
-            title='Featured Playlists'
-            category='playlist'
-            extraControls={`featPlistsMsg, featPlistsMsgDivider`}
-          />
-          <CategContainer id='newRels' title='New Releases' category='album' />
+          {dataState.result.tracks && (
+            <CategContainer
+              id='featPlists'
+              title='Recently Played'
+              category='track'
+              extraControls={`featPlistsMsg, featPlistsMsgDivider`}
+            />
+          )}
+          {dataState.result.albums && (
+            <CategContainer
+              id='newRels'
+              title='New Releases'
+              category='album'
+            />
+          )}
           {state.fChartData?.recommendations && (
             <CategContainer
               id='recommendations'

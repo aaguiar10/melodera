@@ -1,9 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
-import '../styles/globals.css'
+import '@/styles/globals.css'
 import { useEffect, useState, useRef } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { AnalysisContext, ResultsContext } from '../utils/context'
+
 export default function App ({
   Component,
   pageProps: { session, ...pageProps }
@@ -84,8 +85,8 @@ export default function App ({
   useEffect(() => {
     import('bootstrap/dist/js/bootstrap.min.js')
   }, [])
+
   return (
-    // Refetch session near every hour
     <SessionProvider
       session={session}
       refetchInterval={60 * 1}

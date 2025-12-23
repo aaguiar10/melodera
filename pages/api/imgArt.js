@@ -1,9 +1,10 @@
-import { from } from 'node-vibrant'
+import { Vibrant } from 'node-vibrant/node'
+
 export default async function handler (req, res) {
   // Get Image Colors
   if (req.headers?.authorization) {
     var img = req.query.img
-    await from(img)
+    await Vibrant.from(img)
       .getPalette()
       .then(palette => res.status(200).json(palette))
       .catch(error => {

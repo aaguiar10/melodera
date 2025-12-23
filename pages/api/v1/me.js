@@ -1,12 +1,13 @@
-import spotifyApi from '../../../lib/spotify'
+import { createSpotifyClient } from '../../../lib/spotify'
 export default async function handler (req, res) {
   // Get User Info
-  spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
+  const accessToken = req.headers?.authorization?.split(' ')[1]
+  const spotify = createSpotifyClient(accessToken)
   try {
-    const data = await spotifyApi.getMe()
-    res.status(200).send(data.body)
+    const data = await spotify.currentUser.profile()
+    res.status(200).send(data)
   } catch (error) {
     console.error(error)
-    res.status(error.statusCode).send(error.body)
+    res.status(error.status || 500).json({ error: error.message })
   }
 }

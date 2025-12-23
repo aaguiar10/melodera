@@ -1,5 +1,5 @@
 import AddResult from './add-result'
-import SpotifyLogo from '../public/images/spotify_logo_black.png'
+import SpotifyLogo from '../public/images/spotify_logo_white.png'
 import MusicNote from '../public/images/music-note-beamed.svg'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -10,33 +10,43 @@ import { playTrack, getFeatures, getAnalysis } from '../utils/funcs'
 import { useSession } from 'next-auth/react'
 
 const ImageComponent = ({ item, category }) => (
-  <Image
-    src={
-      ((item?.album?.images?.[0] || item?.album?.images?.[1])?.url ||
-        (item?.images?.[0] || item?.images?.[1])?.url) ??
-      MusicNote
-    }
-    style={{ margin: '0.5rem auto 0.25rem' }}
-    width={128}
-    height={128}
-    alt={`${category.charAt(0).toUpperCase() + category.slice(1)} Image`}
-  />
+  <div className='card-image-wrapper'>
+    <Image
+      src={
+        ((item?.album?.images?.[0] || item?.album?.images?.[1])?.url ||
+          (item?.images?.[0] || item?.images?.[1])?.url) ??
+        MusicNote
+      }
+      style={{
+        borderRadius: '12px',
+        objectFit: 'cover'
+      }}
+      width={160}
+      height={160}
+      alt={`${category.charAt(0).toUpperCase() + category.slice(1)} Image`}
+    />
+  </div>
 )
 
 const ResultText = ({ id, item, rank, category }) => (
   <div className='resultText'>
-    {rank ? `${rank}. ` : ``}
-    {(category == 'track' || category == 'album') &&
-      item?.artists?.map(eachArtist => eachArtist.name).join(', ') + ' — '}
-    {item?.name}
+    {rank ? <span className='rank-badge'>{rank}</span> : null}
+    <span className='track-name'>{item?.name}</span>
+    {(category == 'track' || category == 'album') && (
+      <span className='artist-name'>
+        {item?.artists?.map(eachArtist => eachArtist.name).join(', ')}
+      </span>
+    )}
   </div>
 )
 
 const ResultTextInfo = ({ item, category }) => (
-  <div className='resultText resultTextInfo fw-light fs-6'>
-    {category == 'track' && `Released: ${item?.album?.release_date}`}
-    {category == 'artist' && `Followers: ${item?.followers?.total}`}
-    {category == 'album' && `${item?.album_type}, ${item?.release_date}`}
+  <div className='resultText resultTextInfo'>
+    {category == 'track' && item?.album?.release_date}
+    {category == 'artist' &&
+      `${item?.followers?.total?.toLocaleString()} followers`}
+    {category == 'album' &&
+      `${item?.album_type} • ${item?.release_date?.split('-')[0]}`}
     {category == 'playlist' &&
       item?.description &&
       parse(item?.description?.trim().replace(/<\/?[^>]+(>|$)/g, ''))}
@@ -93,7 +103,7 @@ export default function CategItem ({ id, category, item, index }) {
 
   return (
     <div
-      className='text-white-top bg-light text-break'
+      className='text-white-top text-break'
       onClick={handleClick}
       key={item?.id + `_${index}`}
     >

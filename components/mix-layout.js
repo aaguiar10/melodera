@@ -1,13 +1,12 @@
 import MusicNote from '../public/images/music-note-beamed.svg'
-import SpotifyLogo from '../public/images/spotify_logo_black.png'
+import SpotifyLogo from '../public/images/spotify_logo_white.png'
 import Link from 'next/link'
 import Image from 'next/image'
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
 import Toast from 'react-bootstrap/Toast'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
 import Stack from 'react-bootstrap/Stack'
+import { SkeletonMixItem } from './skeleton-loader'
 import { useSession } from 'next-auth/react'
 import { useState, useContext } from 'react'
 import { playTrack, getAnalysis, getFeatures, throttle } from '../utils/funcs'
@@ -32,7 +31,7 @@ export default function MixLayout () {
         console.error('Error:', error)
       })
   }, 2000)
-  
+
   const createMixPlist = throttle(tracks => {
     const trackUris = tracks?.map(track => `spotify:track:${track.id}`)
     const date = new Date()
@@ -73,7 +72,7 @@ export default function MixLayout () {
         >
           {!mixState && state.showMix && (
             <Modal.Body className='text-center' id='mixModalBody'>
-              <div className='spinner-border' role='status' />
+              <SkeletonMixItem count={5} />
             </Modal.Body>
           )}
           {mixState && (
@@ -90,93 +89,94 @@ export default function MixLayout () {
                   <Toast.Body>Playlist added to Your Library</Toast.Body>
                 </Toast>
               </Modal.Header>
-              <Modal.Body id='mixModalBody'>
-                <Container>
-                  <Row>
-                    <ol
-                      className='overflow-scroll py-1 px-0 mx-auto my-0 text-break'
-                      style={{
-                        listStyle: 'none',
-                        maxHeight: '50vh'
-                      }}
-                    >
-                      {mixState?.tracks?.map((result, index) => (
-                        <Stack
-                          className='mix-item py-1 gap-1'
-                          direction='horizontal'
-                          key={`mixItem${index}`}
-                          onClick={() => {
-                            playTrack(
-                              result.id,
-                              player,
-                              deviceId,
-                              session,
-                              state
-                            )
-                            getFeatures(result.id, session, setState)
-                            getAnalysis(result.id, session, setState)
-                          }}
+              <Modal.Body
+                id='mixModalBody'
+                style={{ padding: '1rem', overflow: 'hidden' }}
+              >
+                {mixState?.tracks?.length > 0 ? (
+                  <ol
+                    className='px-0 m-0 text-break'
+                    style={{
+                      listStyle: 'none',
+                      maxHeight: '50vh',
+                      overflowY: 'auto',
+                      overflowX: 'hidden'
+                    }}
+                  >
+                    {mixState?.tracks?.map((result, index) => (
+                      <Stack
+                        className='mix-item py-1 gap-1'
+                        direction='horizontal'
+                        key={`mixItem${index}`}
+                        onClick={() => {
+                          playTrack(result.id, player, deviceId, session, state)
+                          getFeatures(result.id, session, setState)
+                          getAnalysis(result.id, session, setState)
+                        }}
+                      >
+                        <Link
+                          className='d-flex align-items-start flex-column col-auto'
+                          href={
+                            result.external_urls?.spotify ??
+                            'https://www.spotify.com'
+                          }
+                          target='_blank'
+                          rel='noreferrer'
+                          onClick={e => e.stopPropagation()}
+                          aria-label='Go to track on spotify'
                         >
-                          <Link
-                            className='d-flex align-items-start flex-column col-auto'
-                            href={
-                              result.external_urls?.spotify ??
-                              'https://www.spotify.com'
+                          <Image
+                            className='img-fluid mb-1'
+                            src={SpotifyLogo}
+                            width={35}
+                            height={10}
+                            alt='spotify logo'
+                          />
+                          <Image
+                            className='img-fluid artcover'
+                            src={
+                              ((
+                                result?.album?.images?.[0] ||
+                                result?.album?.images?.[1]
+                              )?.url ||
+                                (result?.images?.[0] || item?.images?.[1])
+                                  ?.url) ??
+                              MusicNote
                             }
-                            target='_blank'
-                            rel='noreferrer'
-                            onClick={e => e.stopPropagation()}
-                            aria-label='Go to track on spotify'
+                            width={64}
+                            height={64}
+                            alt='Track Image'
+                          />
+                        </Link>
+                        <Stack>
+                          <p className='fw-light ms-auto mb-0 px-1'>
+                            Released: {result?.album?.release_date}
+                          </p>
+                          <li
+                            key={result.id}
+                            className='px-1 mt-auto'
+                            style={{ fontWeight: '500' }}
                           >
-                            <Image
-                              className='img-fluid mb-1'
-                              src={SpotifyLogo}
-                              width={35}
-                              height={10}
-                              alt='spotify logo'
-                            />
-                            <Image
-                              className='img-fluid artcover'
-                              src={
-                                ((
-                                  result?.album?.images?.[0] ||
-                                  result?.album?.images?.[1]
-                                )?.url ||
-                                  (result?.images?.[0] || item?.images?.[1])
-                                    ?.url) ??
-                                MusicNote
-                              }
-                              width={64}
-                              height={64}
-                              alt='Track Image'
-                            />
-                          </Link>
-                          <Stack>
-                            <p className='fw-light ms-auto mb-0 px-1'>
-                              Released: {result?.album?.release_date}
-                            </p>
-                            <li
-                              key={result.id}
-                              className='px-1 mt-auto'
-                              style={{ fontWeight: '500' }}
-                            >
-                              {++index}.{' '}
-                              {result.artists
-                                .map(artist => artist.name)
-                                .join(', ')}{' '}
-                              — {result.name}
-                            </li>
-                          </Stack>
+                            {++index}.{' '}
+                            {result.artists
+                              .map(artist => artist.name)
+                              .join(', ')}{' '}
+                            — {result.name}
+                          </li>
                         </Stack>
-                      ))}
-                    </ol>
-                  </Row>
-                </Container>
+                      </Stack>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className='text-center text-muted my-3'>
+                    No tracks available for your mix.
+                  </p>
+                )}
               </Modal.Body>
               <Modal.Footer>
                 {mixState && (
                   <Button
-                    variant='primary'
+                    className='btn-aubergine'
                     onClick={() => createMixPlist(mixState?.tracks)}
                   >
                     Add to Library

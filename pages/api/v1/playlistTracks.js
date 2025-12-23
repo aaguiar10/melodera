@@ -1,16 +1,16 @@
-import spotifyApi from '../../../lib/spotify'
+import { createSpotifyClient } from '../../../lib/spotify'
 export default async function handler (req, res) {
   // Get a Playlist
-  spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
+  const accessToken = req.headers?.authorization?.split(' ')[1]
+  const spotify = createSpotifyClient(accessToken)
   try {
-    const data = await spotifyApi.getPlaylist(req.query.id, {
-      limit: 50,
-      offset: 0,
-      market: req.query.market
-    })
-    res.status(200).send(data.body)
+    const data = await spotify.playlists.getPlaylist(
+      req.query.id,
+      req.query.market
+    )
+    res.status(200).send(data)
   } catch (error) {
     console.error(error)
-    res.status(error.statusCode).send(error.body)
+    res.status(error.status || 500).json({ error: error.message })
   }
 }

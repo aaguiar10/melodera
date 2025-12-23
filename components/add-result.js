@@ -42,7 +42,7 @@ export default function AddResult ({ resultId, category, toggledAdd }) {
 
   // decide what the component returns depending on data/category
   if (!data || !toggledAdd[resultId]) {
-    return <ol className='addResultText' id={resultId}></ol>
+    return null
   } else if (Object.keys(data).length === 0) {
     return (
       <ol className='addResultText' id={resultId}>

@@ -90,7 +90,7 @@ export default function GuideLayout () {
             <div className='modal-footer justify-content-center'>
               <button
                 type='button'
-                className='btn btn-primary'
+                className='btn btn-aubergine'
                 data-bs-target='#customModal'
                 data-bs-toggle='modal'
               >

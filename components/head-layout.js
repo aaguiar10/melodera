@@ -11,7 +11,7 @@ export default function HeadLayout ({
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <meta charSet='utf-8' />
         <meta name='description' content={description} />
-        <meta name='theme-color' content='#F5F0F0' />
+        <meta name='theme-color' content='#0f172a' />
         <title>{title}</title>
         <link rel='shortcut icon' href='/images/icons/favicon.ico' />
         <link

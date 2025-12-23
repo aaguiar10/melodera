@@ -81,7 +81,7 @@ export default function NavBar () {
         ...prevState,
         profileInfo: {
           ...prevState.profileInfo,
-          profPic: profile?.images?.[1]?.url,
+          profPic: profile?.images?.[0]?.url,
           displayName: profile.display_name,
           userCountry: profile.country,
           currentUser: profile.id,
@@ -118,8 +118,7 @@ export default function NavBar () {
         sticky='top'
         expand='sm'
         id='topNav'
-        bg='light'
-        data-bs-theme='light'
+        variant='dark'
         onToggle={() =>
           setNavState(prevState => ({
             ...prevState,
@@ -236,8 +235,9 @@ export default function NavBar () {
                   <NavDropdown.Item
                     className='text-center'
                     id='profile-btn'
-                    data-bs-toggle='modal'
-                    data-bs-target='#profModal'
+                    onClick={() =>
+                      document.getElementById('profModal-trigger')?.click()
+                    }
                   >
                     Profile
                   </NavDropdown.Item>

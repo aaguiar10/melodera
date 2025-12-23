@@ -8,6 +8,7 @@ module.exports = async phase => {
   /** @type {import("next").NextConfig} */
   const nextConfig = {
     reactStrictMode: true,
+    allowedDevOrigins: ['127.0.0.1'],
     images: {
       remotePatterns: [
         {
@@ -26,7 +27,7 @@ module.exports = async phase => {
     const withSerwist = (await import('@serwist/next')).default({
       swSrc: 'worker/index.ts',
       swDest: 'public/sw.js',
-      disable: process.env.NODE_ENV === 'development'
+      disable: process.env.NODE_ENV !== 'production'
     })
     return withSerwist(nextConfig)
   }

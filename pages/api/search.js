@@ -1,49 +1,38 @@
-import spotifyApi from '../../lib/spotify'
+import { createSpotifyClient } from '../../lib/spotify'
 
 export default async function handler (req, res) {
   // Search tracks, artists, albums, playlists
-  spotifyApi.setAccessToken(req.headers?.authorization?.split(' ')[1])
+  const accessToken = req.headers?.authorization?.split(' ')[1]
+  const spotify = createSpotifyClient(accessToken)
 
-  const searchOptions = {
-    limit: 10,
-    offset: req.query.offset ?? 0
-  }
+  const limit = 10
+  const offset = parseInt(req.query.offset) || 0
 
   try {
     if (req.query.type) {
-      const searchMethod = `search${req.query.type
-        .charAt(0)
-        .toUpperCase()}${req.query.type.slice(1)}`
-      const data = await spotifyApi[searchMethod](
+      // Search for a specific type
+      const types = [req.query.type]
+      const data = await spotify.search(
         req.query.query,
-        searchOptions
+        types,
+        undefined,
+        limit,
+        offset
       )
-      res.status(200).json(data.body)
+      res.status(200).json(data)
     } else {
-      const data_1 = await spotifyApi.searchTracks(
+      // Search all types
+      const data = await spotify.search(
         req.query.query,
-        searchOptions
+        ['track', 'artist', 'album', 'playlist'],
+        undefined,
+        limit,
+        offset
       )
-      const data_2 = await spotifyApi.searchArtists(
-        req.query.query,
-        searchOptions
-      )
-      const data_3 = await spotifyApi.searchAlbums(
-        req.query.query,
-        searchOptions
-      )
-      const data_4 = await spotifyApi.searchPlaylists(
-        req.query.query,
-        searchOptions
-      )
-      res
-        .status(200)
-        .json(
-          Object.assign({}, data_1.body, data_2.body, data_3.body, data_4.body)
-        )
+      res.status(200).json(data)
     }
   } catch (error) {
     console.error(error)
-    res.status(error.statusCode).send(error.body)
+    res.status(error.status || 500).json({ error: error.message })
   }
 }

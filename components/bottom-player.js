@@ -54,8 +54,13 @@ export default function BottomPlayer ({
     {
       title: 'Pitch',
       content: dominantPitch ? ' ' + dominantPitch : '',
-      style: { backgroundColor: currPitch, width: '4rem' },
-      className: 'fw-bold text-center text-black border border-black'
+      style: {
+        backgroundColor: currPitch,
+        width: '4rem',
+        color: '#0f172a',
+        border: '2px solid #334155'
+      },
+      className: 'fw-bold text-center'
     },
     { title: 'Mood', content: getMoodString(state.featuresData?.valence) },
     {
@@ -374,7 +379,7 @@ export default function BottomPlayer ({
   return (
     <>
       <div
-        className='overflow-scroll fixed-bottom mh-100'
+        className='player-wrapper fixed-bottom'
         style={{
           '--bottom-player-bg': `rgb(${state.artCover.color?.rgbMuted.join(
             ', '
@@ -414,7 +419,6 @@ export default function BottomPlayer ({
                         className={`player-btn-bg-lighten bi bi-${
                           state.isPaused ? 'play' : 'pause'
                         }-fill`}
-                        variant='light'
                         id={state.isPaused ? 'resume-btn' : 'pause-btn'}
                         onClick={handlePlayPause}
                         style={{ fontSize: '3rem' }}
@@ -538,7 +542,6 @@ export default function BottomPlayer ({
                     <Button
                       as={Col}
                       className='player-btn-bg-lighten skip-btn bi bi-skip-start-fill'
-                      variant='light'
                       id='skip-back-btn'
                       onClick={() => {
                         state.profileInfo.subscription !== 'free'
@@ -551,14 +554,12 @@ export default function BottomPlayer ({
                       className={`player-btn-bg-lighten bi bi-${
                         state.isPaused ? 'play' : 'pause'
                       }-circle-fill`}
-                      variant='light'
                       id={state.isPaused ? 'resume-btn' : 'pause-btn'}
                       onClick={handlePlayPause}
                     />
                     <Button
                       as={Col}
                       className='player-btn-bg-lighten skip-btn bi bi-skip-end-fill'
-                      variant='light'
                       id='skip-end-btn'
                       onClick={() => {
                         state.profileInfo.subscription !== 'free'
@@ -584,7 +585,7 @@ export default function BottomPlayer ({
                     >
                       <path
                         fill={state.analysisData.isTrackSaved ? '#fff' : 'none'}
-                        stroke='#000'
+                        stroke='#fff'
                         strokeWidth={5}
                         d='M125.784 35.037c-12.745-12.745-32.798-13.669-46.661-2.138-.017.014-1.805 
                   1.482-4.123 1.482-2.377 0-4.073-1.44-4.14-1.496-13.846-11.517-33.9-10.593-46.644 
@@ -594,7 +595,7 @@ export default function BottomPlayer ({
                       />
                     </svg>
                   </Button>
-                  <Col className='mx-2 bg-dark' xs='auto' id='BPM'>
+                  <Col className='mx-2' xs='auto' id='BPM'>
                     {Math.round(state.featuresData?.tempo) + ' BPM'}
                   </Col>
                   <InputGroup

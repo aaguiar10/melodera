@@ -1,13 +1,29 @@
-import spotifyApi from '@/lib/spotify'
 import NextAuth from 'next-auth'
 import SpotifyProvider from 'next-auth/providers/spotify'
 
 // https://next-auth.js.org/configuration/options
 async function refreshAccessToken (token) {
   try {
-    spotifyApi.setRefreshToken(token.refreshToken)
-    const { body: refreshedToken } = await spotifyApi.refreshAccessToken()
-    spotifyApi.setAccessToken(refreshedToken.access_token)
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(
+          `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+        ).toString('base64')}`
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: token.refreshToken
+      })
+    })
+
+    const refreshedToken = await response.json()
+
+    if (!response.ok) {
+      throw refreshedToken
+    }
+
     return {
       ...token,
       accessToken: refreshedToken.access_token,
@@ -15,7 +31,7 @@ async function refreshAccessToken (token) {
       refreshToken: refreshedToken.refresh_token ?? token.refreshToken
     }
   } catch (error) {
-    console.error(error)
+    console.error('Error refreshing access token:', error)
     return {
       ...token,
       error: 'RefreshAccessTokenError'
