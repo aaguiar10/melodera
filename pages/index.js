@@ -214,7 +214,7 @@ export default function Home () {
             </div>
             <div className='d-flex justify-content-end align-items-center'>
               <span style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                © 2024 Melodera
+                © 2025 Melodera
               </span>
               <Button
                 className='text-decoration-none'
