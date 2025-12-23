@@ -221,13 +221,12 @@ export default function BottomPlayer ({
           onChange={event => {
             state.profileInfo.subscription !== 'free'
               ? player.current
-                  .seek((event?.target.value / 100) * timer.duration)
+                  ?.seek((event?.target.value / 100) * timer.duration)
                   .catch(e => console.error(e))
               : setShowDisabledToast(true)
           }}
           style={{
-            backgroundSize:
-              ((timer.progress / timer.duration) * 100 * 100) / 100 + '% 100%'
+            backgroundSize: `${(timer.progress / timer.duration) * 100}% 100%`
           }}
         />
       </Col>

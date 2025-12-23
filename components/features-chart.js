@@ -141,9 +141,7 @@ export default function FeaturesChart () {
       e => e.start,
       (element, index) => element
     )
-    player.current
-      ?.seek(Math.floor((seekTime < 0 ? 0 : seekTime) * 1000))
-      .catch(e => console.error(e))
+    player.current?.seek(Math.floor((seekTime < 0 ? 0 : seekTime) * 1000)).catch(e => console.error(e))
     setCurrPosition(seekTime)
   }
 

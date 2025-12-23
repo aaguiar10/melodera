@@ -892,7 +892,7 @@ h6,
   background-size: 50% 100%;
   background-repeat: no-repeat;
   border-radius: var(--radius-full) !important;
-  transition: all var(--transition-fast);
+  transition: height var(--transition-fast), background-image var(--transition-fast);
 }
 
 .inputRange:hover {
