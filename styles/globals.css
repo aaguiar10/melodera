@@ -58,15 +58,19 @@
 
 html {
   scroll-behavior: smooth;
+  min-height: 100vh;
+  background: var(--bg-dark);
 }
 
 body {
+  min-height: 100vh;
   background: linear-gradient(
     135deg,
     var(--bg-dark) 0%,
     #1a1a2e 50%,
     var(--bg-dark) 100%
   );
+  background-attachment: fixed;
 }
 
 /* Global Text Colors */
